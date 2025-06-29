@@ -58,17 +58,5 @@ Java最終課題の貸衣装管理システムのソースコードです。
 
 ### 📝 予約関連
 - `Reservation.java`：予約情報クラス  
-- `ReservationService.java`：予約管理ロジック  
+- `ReservationService.java`：予約管理ロジック
 
----
-
-## 📌 開発順序
-
-1. メインページ画面 `MainFrame.java`
-2. 衣装データクラス `Costume.java`, `CostumeService.java`
-3. 衣装検索画面 `CostumeSearchFrame.java`
-4. レンタルデータクラス `Rental.java`, `RentalService.java`
-5. レンタル画面 `RentalFrame.java`
-6. 返却画面 `ReturnFrame.java`
-7. 自分のレンタル状況画面 `MyRentalFrame.java`
-8. 予約機能（`Reservation.java`, `ReservationService.java`, `ReservationFrame.java`）

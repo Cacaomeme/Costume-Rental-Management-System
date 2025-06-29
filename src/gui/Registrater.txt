@@ -1,2 +1,2 @@
-admin,admin,mail_addres,phone_number,password,address
-test,test,mail_address,phone_number,password,address
+admin,admin,admin@admin.com,phone_number,password,address
+test,test,test@test.com,phone_number,password,address

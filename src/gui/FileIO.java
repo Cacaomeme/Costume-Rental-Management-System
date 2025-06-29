@@ -27,8 +27,9 @@ public class FileIO {
 
     public void Write(String name, String memberId, String email, String phone, String password, String address) {
         try {
-            String line = name + "," + memberId + "," + email + "," + phone + "," + password + "," + address + System.lineSeparator();
-            Files.write(registraterPath, line.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+            List<String> lines = new ArrayList<>();
+            lines.add(name + "," + memberId + "," + email + "," + phone + "," + password + "," + address);
+            Files.write(registraterPath, lines, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
         } catch (IOException e) {
             System.err.println("Error writing to registrations file: " + e.getMessage());
         }

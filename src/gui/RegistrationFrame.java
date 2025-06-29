@@ -4,6 +4,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import gui.FileIO;
 
 public class RegistrationFrame extends JFrame {
     private JTextField nameField;
@@ -316,8 +317,8 @@ public class RegistrationFrame extends JFrame {
     
     private boolean isMemberIdExists(String memberId) {
         // TODO: Implement actual database check
-        // Temporary implementation for testing
-        return memberId.equals("admin") || memberId.equals("test");
+        FileIO checkMemberId = new FileIO();
+        return checkMemberId.isMemberIdExists(memberId);
     }
     
     private boolean registerNewMember(String name, String memberId, String email, 
@@ -332,6 +333,10 @@ public class RegistrationFrame extends JFrame {
         System.out.println("Email: " + email);
         System.out.println("Phone: " + phone);
         System.out.println("Address: " + address);
+
+        FileIO writeData = new FileIO();
+        writeData.Write(name, memberId, email, phone, password, address);
+        System.out.println("Member registered successfully.");
         
         return true;
     }

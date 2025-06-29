@@ -1,0 +1,2 @@
+admin,admin,admin@admin.com,phone_number,password,address
+test,test,test@test.com,phone_number,password,address

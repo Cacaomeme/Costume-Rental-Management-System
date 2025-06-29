@@ -160,14 +160,24 @@ public class LoginFrame extends JFrame {
     }
     
     private void handleRegister() {
-        // TODO: 登録画面を開く
-        JOptionPane.showMessageDialog(this, 
-            "Registration window will be implemented next.", 
-            "Info", 
-            JOptionPane.INFORMATION_MESSAGE);
-        
-        // RegisterFrame registerFrame = new RegisterFrame();
-        // registerFrame.setVisible(true);
+        // 新規登録画面を開く
+        try {
+            RegistrationFrame registerFrame = new RegistrationFrame(this);
+            registerFrame.setVisible(true);
+            this.setVisible(false); // ログイン画面を隠す
+        } catch (Exception e) {
+            showErrorMessage("Failed to open registration window: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    // 新規登録画面から戻ってきた時に呼ばれるメソッド
+    public void returnFromRegistration() {
+        this.setVisible(true);
+        this.toFront();
+        // フィールドをクリアして新しい状態にする
+        memberIdField.setText("");
+        clearPasswordField();
     }
     
     private boolean authenticateUser(String memberId, String password) {

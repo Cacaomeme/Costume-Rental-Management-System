@@ -4,6 +4,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import gui.FileIO;
 
 public class LoginFrame extends JFrame {
     private JTextField memberIdField;
@@ -183,7 +184,11 @@ public class LoginFrame extends JFrame {
     private boolean authenticateUser(String memberId, String password) {
         // TODO: 実際の認証ロジックに置き換え
         // テスト用の一時的な実装
-        return memberId.equals("admin") && password.equals("password");
+        FileIO checkData = new FileIO();
+        if (checkData.isValidLogin(memberId, password)) {
+            return true; // 認証成功
+        }
+        return false; // 認証失敗
     }
     
     private void showErrorMessage(String message) {

@@ -142,17 +142,17 @@ public class LoginFrame extends JFrame {
             return;
         }
         
-        // TODO: MemberServiceによる実際のログイン処理を実装
+        //MemberServiceによる実際のログイン処理を実装
         if (authenticateUser(memberId, password)) {
             JOptionPane.showMessageDialog(this, 
                 "Login successful! Welcome, " + memberId, 
                 "Success", 
                 JOptionPane.INFORMATION_MESSAGE);
             
-            // TODO: メイン画面を開く
-            // MainFrame mainFrame = new MainFrame(memberId);
-            // mainFrame.setVisible(true);
-            // this.dispose();
+            //メイン画面を開く
+            MainFrame mainFrame = new MainFrame(memberId);
+            mainFrame.setVisible(true);
+            this.dispose();
             
         } else {
             showErrorMessage("Invalid Member ID or Password.");
@@ -181,9 +181,8 @@ public class LoginFrame extends JFrame {
         clearPasswordField();
     }
     
+    //ログイン認証
     private boolean authenticateUser(String memberId, String password) {
-        // TODO: 実際の認証ロジックに置き換え
-        // テスト用の一時的な実装
         FileIO checkData = new FileIO();
         if (checkData.isValidLogin(memberId, password)) {
             return true; // 認証成功

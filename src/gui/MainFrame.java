@@ -275,15 +275,9 @@ public class MainFrame extends JFrame {
     
     private void openAccountSettings() {
         try {
-            // TODO: AccountSettingsFrameを実装後に有効化
-            // AccountSettingsFrame accountFrame = new AccountSettingsFrame(currentMemberId);
-            // accountFrame.setVisible(true);
-            
-            // 一時的なメッセージ
-            JOptionPane.showMessageDialog(this,
-                "Account Settings feature will be implemented next.",
-                "Feature Coming Soon",
-                JOptionPane.INFORMATION_MESSAGE);
+            AccountSettingsFrame accountFrame = new AccountSettingsFrame(currentMemberId);
+            accountFrame.setVisible(true);
+            this.setVisible(false); // メイン画面を隠す
         } catch (Exception e) {
             showErrorMessage("Failed to open account settings: " + e.getMessage());
         }

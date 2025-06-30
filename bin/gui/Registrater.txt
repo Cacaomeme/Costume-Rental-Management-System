@@ -1,1 +1,0 @@
-user1,1111,exmaple1@mail.com,111-1111-1111,password,Tokyo.1-1

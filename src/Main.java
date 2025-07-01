@@ -1,8 +1,13 @@
 import gui.LoginFrame;
+import gui.Costume; 
+import gui.CostumeDataManager;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
+import java.util.List;
 
 public class Main {
+	public static List<Costume> allCostumes;
+	
     public static void main(String[] args) {
     	CostumeDataManager dataManager = new CostumeDataManager();
         allCostumes = dataManager.loadCostumes();

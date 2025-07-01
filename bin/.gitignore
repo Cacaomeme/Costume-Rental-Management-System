@@ -1,0 +1,4 @@
+/gui/
+*.class
+bin/
+/images/

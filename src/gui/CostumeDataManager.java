@@ -1,31 +1,33 @@
 package gui;
 
-import java.io.IOException;
-import java.nio.file.*;
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
-
 
 public class CostumeDataManager {
 
-    private static final String FILE_NAME = "gui/costumes.csv";
-
+    
+    private static final String RESOURCE_PATH = "/gui/costumes.csv";
 
     public List<Costume> loadCostumes() {
         List<Costume> costumeList = new ArrayList<>();
-        Path path = Paths.get(FILE_NAME);
 
-        if (!Files.exists(path)) {
-            System.err.println("Costume data file not found: " + FILE_NAME);
-            return costumeList; // Return empty list if file doesn't exist
+    
+        InputStream is = this.getClass().getResourceAsStream(RESOURCE_PATH);
+
+     
+        if (is == null) {
+            System.err.println("Costume data file not found in classpath: " + RESOURCE_PATH);
+            return costumeList;
         }
 
-        try {
-            // Read all lines from the file
-            List<String> lines = Files.readAllLines(path);
-
-            for (String line : lines) {
+       
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
                 // Ignore empty or commented lines
                 if (line.trim().isEmpty() || line.startsWith("#")) {
                     continue;
@@ -53,9 +55,8 @@ public class CostumeDataManager {
                     System.err.println("Skipping malformed line: " + line);
                 }
             }
-
-        } catch (IOException e) {
-            System.err.println("Error reading costume data file: " + e.getMessage());
+        } catch (Exception e) {
+            System.err.println("Error reading costume data resource: " + e.getMessage());
             e.printStackTrace();
         }
 

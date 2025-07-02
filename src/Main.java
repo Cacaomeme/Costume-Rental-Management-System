@@ -1,9 +1,9 @@
-import gui.LoginFrame;
 import gui.Costume; 
 import gui.CostumeDataManager;
+import gui.LoginFrame;
+import java.util.List;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
-import java.util.List;
 
 public class Main {
 	public static List<Costume> allCostumes;

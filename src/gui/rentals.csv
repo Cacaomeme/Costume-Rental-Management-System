@@ -1,0 +1,5 @@
+# Rental Management System - Rental Records
+# Format: rentalId,memberId,costumeId,rentalDate,returnDate,actualReturnDate,totalCost,lateFee,status
+R001,admin,C002,2025-07-03,2025-07-05,,148.5,0.0,ACTIVE
+R002,admin,C002,2025-07-03,2025-07-06,,198.0,0.0,ACTIVE
+R003,admin,C002,2025-08-31,2025-09-03,,198.0,0.0,ACTIVE

@@ -376,7 +376,7 @@ public class CostumeSearchFrame extends JFrame {
         JLabel eventLabel = new JLabel("Event: " + costume.getEventDisplayName());
         eventLabel.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 12));
         
-        JLabel priceLabel = new JLabel("Price: $" + String.format("%.0f", costume.getPrice()));
+        JLabel priceLabel = new JLabel("Price: $" + String.format("%.1f", costume.getPrice()));
         priceLabel.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 12));
         priceLabel.setForeground(new Color(0, 128, 0)); // 緑色で価格を強調
         
@@ -413,11 +413,17 @@ public class CostumeSearchFrame extends JFrame {
         rentButton.setPreferredSize(new Dimension(100, 35)); // Rentボタンを少し大きく
         
         rentButton.addActionListener(e -> {
-            // TODO: レンタルダイアログを開くかレンタルページに遷移
-            JOptionPane.showMessageDialog(this, 
-                "Rental functionality will be implemented next!\n" +
-                "Member: " + currentMemberId + "\n" +
-                "Costume: " + costume.getCostumeName());
+            try {
+                // レンタル画面を開く
+                RentalFrame rentalFrame = new RentalFrame(currentMemberId, costume);
+                rentalFrame.setVisible(true);
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this,
+                    "Error opening rental screen: " + ex.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+                ex.printStackTrace();
+            }
         });
         
         buttonPanel.add(rentButton);
@@ -435,7 +441,7 @@ public class CostumeSearchFrame extends JFrame {
             "ID: %s\n" +
             "Name: %s\n" +
             "Event: %s\n" +
-            "Price: $%.0f\n" +
+            "Price: $%.1f\n" +
             "Size: %s\n" +
             "Stock: %d\n" +
             "Image: %s",

@@ -52,6 +52,13 @@ public class MainFrame extends JFrame {
         setupButtonStyle(accountButton, new Color(147, 112, 219));
         setupButtonStyle(logoutButton, new Color(220, 20, 60));
         
+        // すべてのボタンのフォーカスを無効化（点滅停止）
+        searchButton.setFocusable(false);
+        myRentalsButton.setFocusable(false);
+        reservationsButton.setFocusable(false);
+        accountButton.setFocusable(false);
+        logoutButton.setFocusable(false);
+        
         // ボタンサイズを統一
         Dimension buttonSize = new Dimension(200, 50);
         searchButton.setPreferredSize(buttonSize);
@@ -224,18 +231,11 @@ public class MainFrame extends JFrame {
         timeLabel.setText(timeText);
     }
     
-    // 各機能を開くメソッド（後で実装）
+    // 各機能を開くメソッド
     private void openCostumeSearch() {
         try {
-            // TODO: CostumeSearchFrameを実装後に有効化
-            // CostumeSearchFrame searchFrame = new CostumeSearchFrame(currentMemberId);
-            // searchFrame.setVisible(true);
-            
-            // 一時的なメッセージ
-            JOptionPane.showMessageDialog(this,
-                "Costume Search feature will be implemented next.",
-                "Feature Coming Soon",
-                JOptionPane.INFORMATION_MESSAGE);
+            CostumeSearchFrame searchFrame = new CostumeSearchFrame(currentMemberId);
+            searchFrame.setVisible(true);
         } catch (Exception e) {
             showErrorMessage("Failed to open costume search: " + e.getMessage());
         }

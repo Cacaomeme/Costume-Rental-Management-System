@@ -69,7 +69,7 @@ public class RentalService {
             try (PrintWriter writer = new PrintWriter(
                     new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8))) {
                 writer.println("# Rental Management System - Rental Records");
-                writer.println("# Format: rentalId,memberId,costumeId,rentalDate,returnDate,actualReturnDate,totalCost,lateFee,status");
+                writer.println("# Format: rentalId,memberId,costumeId,size,rentalDate,returnDate,actualReturnDate,totalCost,lateFee,status");
             }
             
         } catch (IOException e) {
@@ -85,7 +85,7 @@ public class RentalService {
                 new OutputStreamWriter(new FileOutputStream(RENTAL_FILE_PATH), StandardCharsets.UTF_8))) {
             
             writer.println("# Rental Management System - Rental Records");
-            writer.println("# Format: rentalId,memberId,costumeId,rentalDate,returnDate,actualReturnDate,totalCost,lateFee,status");
+            writer.println("# Format: rentalId,memberId,costumeId,size,rentalDate,returnDate,actualReturnDate,totalCost,lateFee,status");
             
             for (Rental rental : allRentals) {
                 writer.println(rental.toCsvString());
@@ -121,22 +121,22 @@ public class RentalService {
     /**
      * 新しいレンタルを作成
      */
-    public boolean createRental(String memberId, String costumeId, LocalDate rentalDate, 
+    public boolean createRental(String memberId, String costumeId, String size, LocalDate rentalDate, 
                                LocalDate returnDate, double totalCost) {
         try {
             // 衣装の在庫確認
-            if (!isCostumeAvailable(costumeId)) {
-                System.err.println("Costume " + costumeId + " is not available for rental");
+            if (!isCostumeAvailable(costumeId, size)) {
+                System.err.println("Costume " + costumeId + " size " + size + " is not available for rental");
                 return false;
             }
             
             String rentalId = generateNewRentalId();
-            Rental newRental = new Rental(rentalId, memberId, costumeId, rentalDate, returnDate, totalCost);
+            Rental newRental = new Rental(rentalId, memberId, costumeId, size, rentalDate, returnDate, totalCost);
             
             allRentals.add(newRental);
             
             // 衣装の在庫を減らす
-            updateCostumeStock(costumeId, -1);
+            updateCostumeStock(costumeId, size, -1);
             
             // ファイルに保存
             saveRentals();
@@ -157,7 +157,20 @@ public class RentalService {
         List<Costume> costumes = costumeManager.loadCostumes();
         for (Costume costume : costumes) {
             if (costume.getCostumeId().equals(costumeId)) {
-                return costume.getStock() > 0;
+                return costume.getTotalStock() > 0;
+            }
+        }
+        return false;
+    }
+    
+    /**
+     * 特定サイズの衣装が利用可能かチェック
+     */
+    public boolean isCostumeAvailable(String costumeId, String size) {
+        List<Costume> costumes = costumeManager.loadCostumes();
+        for (Costume costume : costumes) {
+            if (costume.getCostumeId().equals(costumeId)) {
+                return costume.hasSize(size);
             }
         }
         return false;
@@ -169,6 +182,15 @@ public class RentalService {
     private void updateCostumeStock(String costumeId, int change) {
         // TODO: CostumeDataManagerに在庫更新機能を追加する必要がある
         System.out.println("Stock update for costume " + costumeId + ": " + change);
+        // 現在はログ出力のみ。実際の実装では衣装データファイルを更新する
+    }
+    
+    /**
+     * 特定サイズの衣装の在庫を更新（レンタル時-1、返却時+1）
+     */
+    private void updateCostumeStock(String costumeId, String size, int change) {
+        // TODO: CostumeDataManagerに在庫更新機能を追加する必要がある
+        System.out.println("Stock update for costume " + costumeId + " size " + size + ": " + change);
         // 現在はログ出力のみ。実際の実装では衣装データファイルを更新する
     }
     
@@ -235,7 +257,7 @@ public class RentalService {
                 }
                 
                 // 衣装の在庫を戻す
-                updateCostumeStock(rental.getCostumeId(), 1);
+                updateCostumeStock(rental.getCostumeId(), rental.getSize(), 1);
                 
                 // ファイルに保存
                 saveRentals();

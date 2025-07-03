@@ -25,6 +25,10 @@ public class RentalFrame extends JFrame {
     private JLabel costumeStockLabel;
     private JLabel dailyRateLabel;
     
+    // サイズ選択用コンポーネント
+    private JComboBox<String> sizeComboBox;
+    private JLabel selectedSizeStockLabel;
+    
     private JSpinner rentalDaysSpinner;
     private JSpinner startDateSpinner; // 開始日選択用
     private JLabel startDateLabel;
@@ -76,6 +80,15 @@ public class RentalFrame extends JFrame {
         dailyRateLabel = new JLabel();
         dailyRateLabel.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 12));
         dailyRateLabel.setForeground(new Color(0, 128, 0));
+        
+        // サイズ選択コンボボックス
+        sizeComboBox = new JComboBox<>();
+        sizeComboBox.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 14));
+        sizeComboBox.setPreferredSize(new Dimension(100, 30));
+        
+        selectedSizeStockLabel = new JLabel();
+        selectedSizeStockLabel.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 12));
+        selectedSizeStockLabel.setForeground(new Color(0, 100, 0));
         
         // レンタル期間選択
         rentalDaysSpinner = new JSpinner(new SpinnerNumberModel(3, MIN_RENTAL_DAYS, MAX_RENTAL_DAYS, 1));
@@ -210,18 +223,60 @@ public class RentalFrame extends JFrame {
             javax.swing.border.TitledBorder.DEFAULT_POSITION,
             new Font(Font.SANS_SERIF, Font.BOLD, 14)));
         
-        // 上部：レンタル期間選択
+        // 上部：サイズ選択
+        JPanel sizePanel = createSizeSelectionPanel();
+        
+        // 中央：レンタル期間選択
         JPanel periodPanel = createRentalPeriodPanel();
         
-        // 中央：利用規約
+        // 下部：利用規約と料金表示をまとめる
         JPanel termsPanel = createTermsPanel();
-        
-        // 下部：料金表示
         JPanel costPanel = createCostPanel();
+        JPanel bottomPanel = new JPanel();
+        bottomPanel.setLayout(new BoxLayout(bottomPanel, BoxLayout.Y_AXIS));
+        bottomPanel.add(termsPanel);
+        bottomPanel.add(Box.createVerticalStrut(10)); // 余白
+        bottomPanel.add(costPanel);
         
-        panel.add(periodPanel, BorderLayout.NORTH);
-        panel.add(termsPanel, BorderLayout.CENTER);
-        panel.add(costPanel, BorderLayout.SOUTH);
+        panel.add(sizePanel, BorderLayout.NORTH);
+        panel.add(periodPanel, BorderLayout.CENTER);
+        panel.add(bottomPanel, BorderLayout.SOUTH);
+        
+        return panel;
+    }
+    
+    private JPanel createSizeSelectionPanel() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBorder(BorderFactory.createTitledBorder(
+            BorderFactory.createEtchedBorder(), "Size Selection",
+            javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION,
+            javax.swing.border.TitledBorder.DEFAULT_POSITION,
+            new Font(Font.SANS_SERIF, Font.BOLD, 12)));
+        panel.setPreferredSize(new Dimension(400, 80));
+        
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(8, 8, 8, 8);
+        gbc.anchor = GridBagConstraints.WEST;
+        
+        Font labelFont = new Font(Font.SANS_SERIF, Font.BOLD, 12);
+        
+        // サイズ選択
+        gbc.gridx = 0; gbc.gridy = 0;
+        JLabel sizeLabel = new JLabel("Select Size:");
+        sizeLabel.setFont(labelFont);
+        panel.add(sizeLabel, gbc);
+        
+        gbc.gridx = 1;
+        panel.add(sizeComboBox, gbc);
+        
+        // 選択されたサイズの在庫数
+        gbc.gridx = 0; gbc.gridy = 1;
+        JLabel stockLabel = new JLabel("Available Stock:");
+        stockLabel.setFont(labelFont);
+        panel.add(stockLabel, gbc);
+        
+        gbc.gridx = 1;
+        panel.add(selectedSizeStockLabel, gbc);
         
         return panel;
     }
@@ -235,19 +290,8 @@ public class RentalFrame extends JFrame {
         
         Font labelFont = new Font(Font.SANS_SERIF, Font.BOLD, 12);
         
-        // 会員ID
-        gbc.gridx = 0; gbc.gridy = 0;
-        JLabel memberLabel = new JLabel("Member ID:");
-        memberLabel.setFont(labelFont);
-        panel.add(memberLabel, gbc);
-        
-        gbc.gridx = 1;
-        JLabel memberValueLabel = new JLabel(currentMemberId);
-        memberValueLabel.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 12));
-        panel.add(memberValueLabel, gbc);
-        
         // レンタル期間
-        gbc.gridx = 0; gbc.gridy = 1;
+        gbc.gridx = 0; gbc.gridy = 0;
         JLabel daysLabel = new JLabel("Rental Period:");
         daysLabel.setFont(labelFont);
         panel.add(daysLabel, gbc);
@@ -259,7 +303,7 @@ public class RentalFrame extends JFrame {
         panel.add(daysInputPanel, gbc);
         
         // 開始日
-        gbc.gridx = 0; gbc.gridy = 2;
+        gbc.gridx = 0; gbc.gridy = 1;
         JLabel startLabel = new JLabel("Start Date:");
         startLabel.setFont(labelFont);
         panel.add(startLabel, gbc);
@@ -268,7 +312,7 @@ public class RentalFrame extends JFrame {
         panel.add(startDateSpinner, gbc);
         
         // 返却予定日
-        gbc.gridx = 0; gbc.gridy = 3;
+        gbc.gridx = 0; gbc.gridy = 2;
         JLabel endLabel = new JLabel("Return Date:");
         endLabel.setFont(labelFont);
         panel.add(endLabel, gbc);
@@ -288,7 +332,7 @@ public class RentalFrame extends JFrame {
             new Font(Font.SANS_SERIF, Font.BOLD, 12)));
         
         JScrollPane scrollPane = new JScrollPane(termsTextArea);
-        scrollPane.setPreferredSize(new Dimension(400, 180)); // 高さを大きくする
+        scrollPane.setPreferredSize(new Dimension(400, 100)); // 高さを小さくする
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         
@@ -423,12 +467,20 @@ public class RentalFrame extends JFrame {
         // イベント
         costumeEventLabel.setText("Event: " + selectedCostume.getEventDisplayName());
         
-        // サイズ
-        costumeSizeLabel.setText("Size: " + selectedCostume.getSize());
+        // 利用可能なサイズを表示
+        StringBuilder sizeInfo = new StringBuilder("Available Sizes: ");
+        for (String size : selectedCostume.getAvailableSizes()) {
+            sizeInfo.append(size).append(" (").append(selectedCostume.getStockForSize(size)).append("), ");
+        }
+        if (sizeInfo.length() > 0) {
+            sizeInfo.setLength(sizeInfo.length() - 2); // 最後のカンマとスペースを削除
+        }
+        costumeSizeLabel.setText(sizeInfo.toString());
         
-        // 在庫
-        costumeStockLabel.setText("Stock: " + selectedCostume.getStock());
-        if (selectedCostume.getStock() <= 2) {
+        // 総在庫数
+        int totalStock = selectedCostume.getTotalStock();
+        costumeStockLabel.setText("Total Stock: " + totalStock);
+        if (totalStock <= 2) {
             costumeStockLabel.setForeground(new Color(255, 69, 0));
         } else {
             costumeStockLabel.setForeground(new Color(0, 128, 0));
@@ -438,8 +490,49 @@ public class RentalFrame extends JFrame {
         double dailyRate = selectedCostume.getPrice() * DAILY_RATE_MULTIPLIER;
         dailyRateLabel.setText("Daily Rate: $" + String.format("%.2f", dailyRate));
         
+        // サイズ選択コンボボックスを設定
+        setupSizeComboBox();
+        
         // 画像読み込み
         loadCostumeImage();
+    }
+    
+    private void setupSizeComboBox() {
+        sizeComboBox.removeAllItems();
+        
+        // 利用可能なサイズをコンボボックスに追加
+        for (String size : selectedCostume.getAvailableSizes()) {
+            if (selectedCostume.getStockForSize(size) > 0) {
+                sizeComboBox.addItem(size);
+            }
+        }
+        
+        // 最初のサイズを選択
+        if (sizeComboBox.getItemCount() > 0) {
+            sizeComboBox.setSelectedIndex(0);
+            updateSelectedSizeStock();
+        }
+        
+        // サイズ変更時のイベントリスナー
+        sizeComboBox.addActionListener(e -> {
+            updateSelectedSizeStock();
+            updateConfirmButtonState();
+        });
+    }
+    
+    private void updateSelectedSizeStock() {
+        String selectedSize = (String) sizeComboBox.getSelectedItem();
+        if (selectedSize != null) {
+            int stock = selectedCostume.getStockForSize(selectedSize);
+            selectedSizeStockLabel.setText(selectedSize + ": " + stock + " available");
+            
+            // 在庫が少ない場合は色を変更
+            if (stock <= 2) {
+                selectedSizeStockLabel.setForeground(new Color(255, 69, 0));
+            } else {
+                selectedSizeStockLabel.setForeground(new Color(0, 100, 0));
+            }
+        }
     }
     
     private void loadCostumeImage() {
@@ -486,7 +579,9 @@ public class RentalFrame extends JFrame {
     }
     
     private void updateConfirmButtonState() {
-        boolean canConfirm = agreeCheckBox.isSelected() && selectedCostume.getStock() > 0;
+        String selectedSize = (String) sizeComboBox.getSelectedItem();
+        boolean hasStock = selectedSize != null && selectedCostume.getStockForSize(selectedSize) > 0;
+        boolean canConfirm = agreeCheckBox.isSelected() && hasStock;
         confirmButton.setEnabled(canConfirm);
     }
     
@@ -499,9 +594,10 @@ public class RentalFrame extends JFrame {
             return;
         }
         
-        if (selectedCostume.getStock() <= 0) {
+        String selectedSize = (String) sizeComboBox.getSelectedItem();
+        if (selectedSize == null || selectedCostume.getStockForSize(selectedSize) <= 0) {
             JOptionPane.showMessageDialog(this,
-                "This costume is currently out of stock.",
+                "The selected size is currently out of stock.",
                 "Out of Stock",
                 JOptionPane.ERROR_MESSAGE);
             return;
@@ -523,10 +619,14 @@ public class RentalFrame extends JFrame {
             double dailyRate = selectedCostume.getPrice() * DAILY_RATE_MULTIPLIER;
             double totalCost = dailyRate * days;
             
+            // 選択されたサイズの在庫を減らす
+            selectedCostume.decreaseStock(selectedSize);
+            
             // レンタル作成
             boolean success = rentalService.createRental(
                 currentMemberId,
                 selectedCostume.getCostumeId(),
+                selectedSize,
                 startDate,
                 endDate,
                 totalCost

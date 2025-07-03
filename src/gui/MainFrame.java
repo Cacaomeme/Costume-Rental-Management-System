@@ -243,15 +243,8 @@ public class MainFrame extends JFrame {
     
     private void openMyRentals() {
         try {
-            // TODO: MyRentalsFrameを実装後に有効化
-            // MyRentalsFrame rentalsFrame = new MyRentalsFrame(currentMemberId);
-            // rentalsFrame.setVisible(true);
-            
-            // 一時的なメッセージ
-            JOptionPane.showMessageDialog(this,
-                "My Rentals feature will be implemented next.",
-                "Feature Coming Soon",
-                JOptionPane.INFORMATION_MESSAGE);
+            MyRentalsFrame rentalsFrame = new MyRentalsFrame(currentMemberId);
+            rentalsFrame.setVisible(true);
         } catch (Exception e) {
             showErrorMessage("Failed to open rentals: " + e.getMessage());
         }

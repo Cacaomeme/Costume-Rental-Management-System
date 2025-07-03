@@ -380,25 +380,22 @@ public class CostumeSearchFrame extends JFrame {
         priceLabel.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 12));
         priceLabel.setForeground(new Color(0, 128, 0)); // 緑色で価格を強調
         
-        JLabel sizeLabel = new JLabel("Size: " + costume.getSize());
-        sizeLabel.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 12));
-        
-        JLabel stockLabel = new JLabel("Stock: " + costume.getStock());
-        stockLabel.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 12));
-        // 在庫数に応じて色を変更
-        if (costume.getStock() <= 2) {
-            stockLabel.setForeground(new Color(255, 69, 0)); // オレンジ色（在庫少）
-        } else if (costume.getStock() <= 5) {
-            stockLabel.setForeground(new Color(255, 140, 0)); // 黄色っぽい
-        } else {
-            stockLabel.setForeground(new Color(0, 128, 0)); // 緑色（在庫十分）
+        // サイズと在庫をまとめて表示
+        StringBuilder sizeStockInfo = new StringBuilder();
+        for (String size : costume.getAvailableSizes()) {
+            int stock = costume.getStockForSize(size);
+            sizeStockInfo.append(size).append("(").append(stock).append("), ");
         }
+        if (sizeStockInfo.length() > 0) {
+            sizeStockInfo.setLength(sizeStockInfo.length() - 2); // 最後のカンマを削除
+        }
+        JLabel sizeLabel = new JLabel("Size: " + sizeStockInfo.toString());
+        sizeLabel.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 12));
         
         infoPanel.add(nameLabel);
         infoPanel.add(eventLabel);
         infoPanel.add(priceLabel);
         infoPanel.add(sizeLabel);
-        infoPanel.add(stockLabel);
 
         // ボタンパネル
         JPanel buttonPanel = new JPanel(new FlowLayout());

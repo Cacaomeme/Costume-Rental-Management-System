@@ -34,18 +34,33 @@ public class CostumeDataManager {
                 }
 
                 String[] data = line.split(",");
-                if (data.length == 7) {
+                if (data.length >= 5) {
                     try {
-                        // Parse data and create a Costume object
+                        // Parse basic data
                         String costumeId = data[0].trim();
                         String costumeName = data[1].trim();
                         CostumeEvent event = CostumeEvent.valueOf(data[2].trim());
                         double price = Double.parseDouble(data[3].trim());
-                        String size = data[4].trim();
-                        int stock = Integer.parseInt(data[5].trim());
-                        String imagePath = data[6].trim();
-
-                        Costume costume = new Costume(costumeId, costumeName, event, price, size, stock, imagePath);
+                        
+                        // Find the image path (last element)
+                        String imagePath = data[data.length - 1].trim();
+                        
+                        // Create costume object
+                        Costume costume = new Costume(costumeId, costumeName, event, price, imagePath);
+                        
+                        // Parse size:stock pairs (elements 4 to second-to-last)
+                        for (int i = 4; i < data.length - 1; i++) {
+                            String sizeStockPair = data[i].trim();
+                            if (sizeStockPair.contains(":")) {
+                                String[] pair = sizeStockPair.split(":");
+                                if (pair.length == 2) {
+                                    String size = pair[0].trim();
+                                    int stock = Integer.parseInt(pair[1].trim());
+                                    costume.addSizeStock(size, stock);
+                                }
+                            }
+                        }
+                        
                         costumeList.add(costume);
 
                     } catch (IllegalArgumentException e) {

@@ -11,6 +11,7 @@ public class Rental {
     private String rentalId;          // レンタルID（R001, R002...）
     private String memberId;          // 会員ID
     private String costumeId;         // 衣装ID
+    private String size;              // サイズ
     private LocalDate rentalDate;     // レンタル開始日
     private LocalDate returnDate;     // 返却予定日
     private LocalDate actualReturnDate; // 実際の返却日（null=未返却）
@@ -42,11 +43,12 @@ public class Rental {
     }
     
     // コンストラクタ（新規レンタル用）
-    public Rental(String rentalId, String memberId, String costumeId, 
+    public Rental(String rentalId, String memberId, String costumeId, String size,
                   LocalDate rentalDate, LocalDate returnDate, double totalCost) {
         this.rentalId = rentalId;
         this.memberId = memberId;
         this.costumeId = costumeId;
+        this.size = size;
         this.rentalDate = rentalDate;
         this.returnDate = returnDate;
         this.totalCost = totalCost;
@@ -56,12 +58,13 @@ public class Rental {
     }
     
     // コンストラクタ（CSVから読み込み用）
-    public Rental(String rentalId, String memberId, String costumeId,
+    public Rental(String rentalId, String memberId, String costumeId, String size,
                   LocalDate rentalDate, LocalDate returnDate, LocalDate actualReturnDate,
                   double totalCost, double lateFee, RentalStatus status) {
         this.rentalId = rentalId;
         this.memberId = memberId;
         this.costumeId = costumeId;
+        this.size = size;
         this.rentalDate = rentalDate;
         this.returnDate = returnDate;
         this.actualReturnDate = actualReturnDate;
@@ -81,6 +84,10 @@ public class Rental {
     
     public String getCostumeId() {
         return costumeId;
+    }
+    
+    public String getSize() {
+        return size;
     }
     
     public LocalDate getRentalDate() {
@@ -118,6 +125,10 @@ public class Rental {
     
     public void setCostumeId(String costumeId) {
         this.costumeId = costumeId;
+    }
+    
+    public void setSize(String size) {
+        this.size = size;
     }
     
     public void setRentalDate(LocalDate rentalDate) {
@@ -238,6 +249,7 @@ public class Rental {
             rentalId,
             memberId,
             costumeId,
+            size,
             rentalDate.format(formatter),
             returnDate.format(formatter),
             actualReturnStr,
@@ -252,7 +264,7 @@ public class Rental {
      */
     public static Rental fromCsvString(String csvLine) {
         String[] parts = csvLine.split(",");
-        if (parts.length != 9) {
+        if (parts.length != 10) {
             throw new IllegalArgumentException("Invalid CSV format for Rental");
         }
         
@@ -261,14 +273,15 @@ public class Rental {
         String rentalId = parts[0].trim();
         String memberId = parts[1].trim();
         String costumeId = parts[2].trim();
-        LocalDate rentalDate = LocalDate.parse(parts[3].trim(), formatter);
-        LocalDate returnDate = LocalDate.parse(parts[4].trim(), formatter);
-        LocalDate actualReturnDate = parts[5].trim().isEmpty() ? null : LocalDate.parse(parts[5].trim(), formatter);
-        double totalCost = Double.parseDouble(parts[6].trim());
-        double lateFee = Double.parseDouble(parts[7].trim());
-        RentalStatus status = RentalStatus.valueOf(parts[8].trim());
+        String size = parts[3].trim();
+        LocalDate rentalDate = LocalDate.parse(parts[4].trim(), formatter);
+        LocalDate returnDate = LocalDate.parse(parts[5].trim(), formatter);
+        LocalDate actualReturnDate = parts[6].trim().isEmpty() ? null : LocalDate.parse(parts[6].trim(), formatter);
+        double totalCost = Double.parseDouble(parts[7].trim());
+        double lateFee = Double.parseDouble(parts[8].trim());
+        RentalStatus status = RentalStatus.valueOf(parts[9].trim());
         
-        return new Rental(rentalId, memberId, costumeId, rentalDate, returnDate, 
+        return new Rental(rentalId, memberId, costumeId, size, rentalDate, returnDate, 
                          actualReturnDate, totalCost, lateFee, status);
     }
     

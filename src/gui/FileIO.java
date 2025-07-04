@@ -19,7 +19,7 @@ public class FileIO {
 
     public FileIO() {
         // ファイルパスの初期化
-        this.registraterPath = Paths.get("gui/Registrater.txt");
+        this.registraterPath = Paths.get("gui/Registrater.csv");
         initializeFile();
     }
 

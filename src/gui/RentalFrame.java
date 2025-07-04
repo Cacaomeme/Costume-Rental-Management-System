@@ -36,6 +36,8 @@ public class RentalFrame extends JFrame {
     private JLabel totalCostLabel;
     private JTextArea termsTextArea;
     private JCheckBox agreeCheckBox;
+    private JCheckBox insuranceCheckBox;
+    private JCheckBox cleaningServiceCheckBox;
     
     private JButton confirmButton;
     private JButton cancelButton;
@@ -45,6 +47,9 @@ public class RentalFrame extends JFrame {
     private static final int MAX_RENTAL_DAYS = 30;
     private static final double DAILY_RATE_MULTIPLIER = 1.0; // 基本料金に対する日額の倍率
 
+    // ReserveCalendarのインスタンスを保持するフィールドを追加
+    private ReserveCalendar calendarDialog;
+    
     public RentalFrame(String memberId, Costume costume) {
         this.currentMemberId = memberId;
         this.selectedCostume = costume;
@@ -434,6 +439,36 @@ public class RentalFrame extends JFrame {
     }
     
     private void setupEventListeners() {
+        // サイズ変更時のイベントリスナー
+        sizeComboBox.addActionListener(e -> {
+            String selectedSize = (String) sizeComboBox.getSelectedItem();
+            if (selectedSize == null) {
+                return;
+            }
+            
+            updateSelectedSizeStock();
+            updateConfirmButtonState();
+
+            // --- ここからロジックを変更 ---
+            // カレンダーがまだ作られていないか、非表示の場合
+            if (calendarDialog == null || !calendarDialog.isVisible()) {
+                calendarDialog = new ReserveCalendar(this, selectedCostume.getCostumeId(), selectedSize);
+                
+                // RentalFrameの右側に表示されるように位置を設定
+                Point location = this.getLocation();
+                calendarDialog.setLocation(location.x + this.getWidth(), location.y);
+                // サイズをさらに小さく設定
+                calendarDialog.setSize(350, 350); 
+                calendarDialog.setVisible(true);
+            } else {
+                // 既に表示されている場合は、新しい情報でカレンダーを更新
+                calendarDialog.updateData(selectedCostume.getCostumeId(), selectedSize);
+                // ウィンドウを最前面に移動
+                calendarDialog.toFront();
+            }
+            // --- ここまで変更 ---
+        });
+
         // レンタル期間変更時の料金更新
         rentalDaysSpinner.addChangeListener(e -> updatePriceCalculation());
         
@@ -513,13 +548,9 @@ public class RentalFrame extends JFrame {
             updateSelectedSizeStock();
         }
         
-        // サイズ変更時のイベントリスナー
-        sizeComboBox.addActionListener(e -> {
-            updateSelectedSizeStock();
-            updateConfirmButtonState();
-        });
+
     }
-    
+
     private void updateSelectedSizeStock() {
         String selectedSize = (String) sizeComboBox.getSelectedItem();
         if (selectedSize != null) {

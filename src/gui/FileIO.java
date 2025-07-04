@@ -6,8 +6,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Enhanced FileIO class for comprehensive member data management
@@ -15,11 +18,15 @@ import java.util.List;
  */
 public class FileIO {
     private Path registraterPath;
+    private Path costumesPath;
+    private Path rentalsPath;
     private static FileIO instance;
 
     public FileIO() {
         // ファイルパスの初期化
         this.registraterPath = Paths.get("gui/Registrater.csv");
+        this.costumesPath = Paths.get("gui/costumes.csv");
+        this.rentalsPath = Paths.get("gui/rentals.csv");
         initializeFile();
     }
 
@@ -116,6 +123,98 @@ public class FileIO {
             System.err.println("Error reading registrations file: " + e.getMessage());
         }
         return false;
+    }
+
+    /**
+     * 指定された衣装とサイズの最大在庫数を取得します。
+     * @param costumeId 衣装ID
+     * @param size サイズ
+     * @return 在庫数。見つからない場合は0。
+     */
+    public int getCostumeStock(String costumeId, String size) {
+        try {
+            List<String> lines = Files.readAllLines(costumesPath, StandardCharsets.UTF_8);
+            for (String line : lines) {
+                if (line.startsWith("#") || line.trim().isEmpty()) continue;
+                
+                String[] values = line.split(",");
+                if (values.length > 4 && values[0].equals(costumeId)) {
+                    // サイズと在庫の情報は4番目の要素から始まる
+                    for (int i = 4; i < values.length - 1; i++) {
+                        String[] stockInfo = values[i].split(":");
+                        if (stockInfo.length == 2 && stockInfo[0].equals(size)) {
+                            return Integer.parseInt(stockInfo[1]);
+                        }
+                    }
+                }
+            }
+        } catch (IOException | NumberFormatException e) {
+            System.err.println("Error reading costume stock from " + costumesPath + ": " + e.getMessage());
+        }
+        return 0; // 見つからなかった場合
+    }
+
+    /**
+     * 指定された衣装とサイズの予約状況を取得します。
+     * @param costumeId 衣装ID
+     * @param size サイズ
+     * @return 日付ごとの予約数を格納したMap
+     */
+    public Map<LocalDate, Integer> getReservationCounts(String costumeId, String size) {
+        Map<LocalDate, Integer> counts = new HashMap<>();
+        try {
+            List<String> lines = Files.readAllLines(rentalsPath, StandardCharsets.UTF_8);
+            for (String line : lines) {
+                if (line.startsWith("#") || line.trim().isEmpty()) continue;
+
+                String[] values = line.split(",");
+                if (values.length < 10) continue;
+
+                String recordCostumeId = values[2];
+                String recordSize = values[3];
+                String status = values[9];
+
+                if (recordCostumeId.equals(costumeId) && recordSize.equals(size) && status.equals("ACTIVE")) {
+                    try {
+                        LocalDate startDate = LocalDate.parse(values[4]);
+                        LocalDate endDate = LocalDate.parse(values[5]);
+
+                        for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
+                            counts.put(date, counts.getOrDefault(date, 0) + 1);
+                        }
+                    } catch (java.time.format.DateTimeParseException e) {
+                        System.err.println("Failed to parse date format in rentals.csv: " + line);
+                    }
+                }
+            }
+        } catch (IOException e) {
+            System.err.println("Error reading rental data from " + rentalsPath + ": " + e.getMessage());
+        }
+        return counts;
+    }
+
+    /**
+     * 指定された期間中、衣装の在庫が利用可能かチェックします。
+     * @param costumeId 衣装ID
+     * @param size サイズ
+     * @param startDate レンタル開始日
+     * @param endDate レンタル終了日
+     * @return 期間中すべての日で在庫があればtrue、1日でも在庫がなければfalse
+     */
+    public boolean isStockAvailableForPeriod(String costumeId, String size, LocalDate startDate, LocalDate endDate) {
+        int maxStock = getCostumeStock(costumeId, size);
+        if (maxStock <= 0) {
+            return false;
+        }
+        Map<LocalDate, Integer> reservationCounts = getReservationCounts(costumeId, size);
+
+        for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
+            int reservedCount = reservationCounts.getOrDefault(date, 0);
+            if (maxStock - reservedCount <= 0) {
+                return false; // この日の在庫がない
+            }
+        }
+        return true; // 期間中すべての日に在庫がある
     }
 
     /**

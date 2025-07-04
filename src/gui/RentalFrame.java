@@ -626,18 +626,14 @@ public class RentalFrame extends JFrame {
         }
         
         String selectedSize = (String) sizeComboBox.getSelectedItem();
-        if (selectedSize == null || selectedCostume.getStockForSize(selectedSize) <= 0) {
-            JOptionPane.showMessageDialog(this,
-                "The selected size is currently out of stock.",
-                "Out of Stock",
-                JOptionPane.ERROR_MESSAGE);
+        if (selectedSize == null) {
+            // このケースは通常発生しないが念のため
             return;
         }
-        
+
         try {
+            // レンタル期間を計算
             int days = (Integer) rentalDaysSpinner.getValue();
-            
-            // 選択された開始日を取得
             java.util.Date selectedDate = (java.util.Date) startDateSpinner.getValue();
             java.util.Calendar cal = java.util.Calendar.getInstance();
             cal.setTime(selectedDate);
@@ -647,11 +643,21 @@ public class RentalFrame extends JFrame {
                 cal.get(java.util.Calendar.DAY_OF_MONTH)
             );
             LocalDate endDate = startDate.plusDays(days - 1);
+
+            // --- ここから追加 ---
+            // 選択された期間の在庫をチェック
+            boolean isAvailable = FileIO.getInstance().isStockAvailableForPeriod(selectedCostume.getCostumeId(), selectedSize, startDate, endDate);
+            if (!isAvailable) {
+                JOptionPane.showMessageDialog(this,
+                    "The selected period includes dates with no stock available.\nPlease check the stock calendar and select a different period.",
+                    "Stock Unavailable",
+                    JOptionPane.ERROR_MESSAGE);
+                return; // 在庫がないので処理を中断
+            }
+            // --- ここまで追加 ---
+
             double dailyRate = selectedCostume.getPrice() * DAILY_RATE_MULTIPLIER;
             double totalCost = dailyRate * days;
-            
-            // 選択されたサイズの在庫を減らす
-            selectedCostume.decreaseStock(selectedSize);
             
             // レンタル作成
             boolean success = rentalService.createRental(

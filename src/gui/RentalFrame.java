@@ -36,6 +36,8 @@ public class RentalFrame extends JFrame {
     private JLabel totalCostLabel;
     private JTextArea termsTextArea;
     private JCheckBox agreeCheckBox;
+    private JCheckBox insuranceCheckBox;
+    private JCheckBox cleaningServiceCheckBox;
     
     private JButton confirmButton;
     private JButton cancelButton;
@@ -45,6 +47,9 @@ public class RentalFrame extends JFrame {
     private static final int MAX_RENTAL_DAYS = 30;
     private static final double DAILY_RATE_MULTIPLIER = 1.0; // 基本料金に対する日額の倍率
 
+    // ReserveCalendarのインスタンスを保持するフィールドを追加
+    private ReserveCalendar calendarDialog;
+    
     public RentalFrame(String memberId, Costume costume) {
         this.currentMemberId = memberId;
         this.selectedCostume = costume;
@@ -434,6 +439,36 @@ public class RentalFrame extends JFrame {
     }
     
     private void setupEventListeners() {
+        // サイズ変更時のイベントリスナー
+        sizeComboBox.addActionListener(e -> {
+            String selectedSize = (String) sizeComboBox.getSelectedItem();
+            if (selectedSize == null) {
+                return;
+            }
+            
+            updateSelectedSizeStock();
+            updateConfirmButtonState();
+
+            // --- ここからロジックを変更 ---
+            // カレンダーがまだ作られていないか、非表示の場合
+            if (calendarDialog == null || !calendarDialog.isVisible()) {
+                calendarDialog = new ReserveCalendar(this, selectedCostume.getCostumeId(), selectedSize);
+                
+                // RentalFrameの右側に表示されるように位置を設定
+                Point location = this.getLocation();
+                calendarDialog.setLocation(location.x + this.getWidth(), location.y);
+                // サイズをさらに小さく設定
+                calendarDialog.setSize(350, 350); 
+                calendarDialog.setVisible(true);
+            } else {
+                // 既に表示されている場合は、新しい情報でカレンダーを更新
+                calendarDialog.updateData(selectedCostume.getCostumeId(), selectedSize);
+                // ウィンドウを最前面に移動
+                calendarDialog.toFront();
+            }
+            // --- ここまで変更 ---
+        });
+
         // レンタル期間変更時の料金更新
         rentalDaysSpinner.addChangeListener(e -> updatePriceCalculation());
         
@@ -513,13 +548,9 @@ public class RentalFrame extends JFrame {
             updateSelectedSizeStock();
         }
         
-        // サイズ変更時のイベントリスナー
-        sizeComboBox.addActionListener(e -> {
-            updateSelectedSizeStock();
-            updateConfirmButtonState();
-        });
+
     }
-    
+
     private void updateSelectedSizeStock() {
         String selectedSize = (String) sizeComboBox.getSelectedItem();
         if (selectedSize != null) {
@@ -595,18 +626,14 @@ public class RentalFrame extends JFrame {
         }
         
         String selectedSize = (String) sizeComboBox.getSelectedItem();
-        if (selectedSize == null || selectedCostume.getStockForSize(selectedSize) <= 0) {
-            JOptionPane.showMessageDialog(this,
-                "The selected size is currently out of stock.",
-                "Out of Stock",
-                JOptionPane.ERROR_MESSAGE);
+        if (selectedSize == null) {
+            // このケースは通常発生しないが念のため
             return;
         }
-        
+
         try {
+            // レンタル期間を計算
             int days = (Integer) rentalDaysSpinner.getValue();
-            
-            // 選択された開始日を取得
             java.util.Date selectedDate = (java.util.Date) startDateSpinner.getValue();
             java.util.Calendar cal = java.util.Calendar.getInstance();
             cal.setTime(selectedDate);
@@ -616,11 +643,21 @@ public class RentalFrame extends JFrame {
                 cal.get(java.util.Calendar.DAY_OF_MONTH)
             );
             LocalDate endDate = startDate.plusDays(days - 1);
+
+            // --- ここから追加 ---
+            // 選択された期間の在庫をチェック
+            boolean isAvailable = FileIO.getInstance().isStockAvailableForPeriod(selectedCostume.getCostumeId(), selectedSize, startDate, endDate);
+            if (!isAvailable) {
+                JOptionPane.showMessageDialog(this,
+                    "The selected period includes dates with no stock available.\nPlease check the stock calendar and select a different period.",
+                    "Stock Unavailable",
+                    JOptionPane.ERROR_MESSAGE);
+                return; // 在庫がないので処理を中断
+            }
+            // --- ここまで追加 ---
+
             double dailyRate = selectedCostume.getPrice() * DAILY_RATE_MULTIPLIER;
             double totalCost = dailyRate * days;
-            
-            // 選択されたサイズの在庫を減らす
-            selectedCostume.decreaseStock(selectedSize);
             
             // レンタル作成
             boolean success = rentalService.createRental(

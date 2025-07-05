@@ -10,7 +10,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 
 /**
- * レンタル手続き画面
+ * Rental procedure screen
  */
 public class RentalFrame extends JFrame {
     private String currentMemberId;
@@ -25,12 +25,14 @@ public class RentalFrame extends JFrame {
     private JLabel costumeStockLabel;
     private JLabel dailyRateLabel;
     
-    // サイズ選択用コンポーネント
+    // Size selection components
     private JComboBox<String> sizeComboBox;
     private JLabel selectedSizeStockLabel;
     
     private JSpinner rentalDaysSpinner;
-    private JSpinner startDateSpinner; // 開始日選択用
+    private JSpinner yearSpinner;
+    private JSpinner monthSpinner;
+    private JSpinner daySpinner;
     private JLabel startDateLabel;
     private JLabel endDateLabel;
     private JLabel totalCostLabel;
@@ -42,12 +44,12 @@ public class RentalFrame extends JFrame {
     private JButton confirmButton;
     private JButton cancelButton;
     
-    // 設定値
+    // Settings
     private static final int MIN_RENTAL_DAYS = 1;
     private static final int MAX_RENTAL_DAYS = 30;
-    private static final double DAILY_RATE_MULTIPLIER = 1.0; // 基本料金に対する日額の倍率
+    private static final double DAILY_RATE_MULTIPLIER = 1.0; // Daily rate multiplier for base price
 
-    // ReserveCalendarのインスタンスを保持するフィールドを追加
+    // Field to hold ReserveCalendar instance
     private ReserveCalendar calendarDialog;
     
     public RentalFrame(String memberId, Costume costume) {
@@ -64,92 +66,102 @@ public class RentalFrame extends JFrame {
     }
     
     private void initializeComponents() {
-        // 衣装情報表示用コンポーネント
+        // Costume information display components
         costumeImageLabel = new JLabel();
         costumeImageLabel.setPreferredSize(new Dimension(200, 150));
         costumeImageLabel.setBorder(BorderFactory.createLoweredBevelBorder());
         costumeImageLabel.setHorizontalAlignment(JLabel.CENTER);
         
         costumeNameLabel = new JLabel();
-        costumeNameLabel.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 16));
+        costumeNameLabel.setFont(new Font("Arial", Font.BOLD, 16));
         
         costumeEventLabel = new JLabel();
-        costumeEventLabel.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 12));
+        costumeEventLabel.setFont(new Font("Arial", Font.BOLD, 12));
         
         costumeSizeLabel = new JLabel();
-        costumeSizeLabel.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 12));
+        costumeSizeLabel.setFont(new Font("Arial", Font.BOLD, 12));
         
         costumeStockLabel = new JLabel();
-        costumeStockLabel.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 12));
+        costumeStockLabel.setFont(new Font("Arial", Font.BOLD, 12));
         
         dailyRateLabel = new JLabel();
-        dailyRateLabel.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 12));
+        dailyRateLabel.setFont(new Font("Arial", Font.BOLD, 12));
         dailyRateLabel.setForeground(new Color(0, 128, 0));
         
-        // サイズ選択コンボボックス
+        // Size selection combo box
         sizeComboBox = new JComboBox<>();
-        sizeComboBox.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 14));
+        sizeComboBox.setFont(new Font("Arial", Font.BOLD, 14));
         sizeComboBox.setPreferredSize(new Dimension(100, 30));
         
         selectedSizeStockLabel = new JLabel();
-        selectedSizeStockLabel.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 12));
+        selectedSizeStockLabel.setFont(new Font("Arial", Font.BOLD, 12));
         selectedSizeStockLabel.setForeground(new Color(0, 100, 0));
         
-        // レンタル期間選択
+        // Rental period selection
         rentalDaysSpinner = new JSpinner(new SpinnerNumberModel(3, MIN_RENTAL_DAYS, MAX_RENTAL_DAYS, 1));
-        rentalDaysSpinner.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 14));
+        rentalDaysSpinner.setFont(new Font("Arial", Font.BOLD, 14));
         
-        // 開始日選択
-        java.util.Calendar calendar = java.util.Calendar.getInstance();
-        calendar.add(java.util.Calendar.DAY_OF_MONTH, 1); // 明日から開始可能
-        java.util.Date minDate = calendar.getTime();
+        // Start date selection - separate spinners for year, month, day
+        LocalDate tomorrow = LocalDate.now().plusDays(1); // Start from tomorrow
         
-        calendar.add(java.util.Calendar.MONTH, 3); // 3ヶ月後まで選択可能
-        java.util.Date maxDate = calendar.getTime();
+        // Year spinner (current year to 2 years from now)
+        int currentYear = tomorrow.getYear();
+        yearSpinner = new JSpinner(new SpinnerNumberModel(currentYear, currentYear, currentYear + 2, 1));
+        yearSpinner.setFont(new Font("Arial", Font.BOLD, 14));
+        yearSpinner.setPreferredSize(new Dimension(70, 30));
         
-        startDateSpinner = new JSpinner(new SpinnerDateModel(minDate, minDate, maxDate, java.util.Calendar.DAY_OF_MONTH));
-        startDateSpinner.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 14));
+        // Remove comma formatting from year spinner
+        JSpinner.NumberEditor yearEditor = new JSpinner.NumberEditor(yearSpinner, "#");
+        yearSpinner.setEditor(yearEditor);
         
-        // 日付フォーマットを設定
-        JSpinner.DateEditor dateEditor = new JSpinner.DateEditor(startDateSpinner, "yyyy/MM/dd");
-        startDateSpinner.setEditor(dateEditor);
+        // Month spinner (1-12)
+        int currentMonth = tomorrow.getMonthValue();
+        monthSpinner = new JSpinner(new SpinnerNumberModel(currentMonth, 1, 12, 1));
+        monthSpinner.setFont(new Font("Arial", Font.BOLD, 14));
+        monthSpinner.setPreferredSize(new Dimension(50, 30));
+        
+        // Day spinner (1-31, will be adjusted based on month)
+        int currentDay = tomorrow.getDayOfMonth();
+        daySpinner = new JSpinner(new SpinnerNumberModel(currentDay, 1, 31, 1));
+        daySpinner.setFont(new Font("Arial", Font.BOLD, 14));
+        daySpinner.setPreferredSize(new Dimension(50, 30));
         
         startDateLabel = new JLabel();
-        startDateLabel.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 12));
+        startDateLabel.setFont(new Font("Arial", Font.BOLD, 12));
         
         endDateLabel = new JLabel();
-        endDateLabel.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 12));
+        endDateLabel.setFont(new Font("Arial", Font.BOLD, 12));
         
-        // 料金表示
+        // Price display
         totalCostLabel = new JLabel();
-        totalCostLabel.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 16));
+        totalCostLabel.setFont(new Font("Arial", Font.BOLD, 16));
         totalCostLabel.setForeground(new Color(220, 20, 60));
         
-        // 利用規約
+        // Terms and conditions
         termsTextArea = new JTextArea();
         termsTextArea.setEditable(false);
-        termsTextArea.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 11));
+        termsTextArea.setFont(new Font("Arial", Font.BOLD, 11));
         termsTextArea.setBackground(getBackground());
-        termsTextArea.setLineWrap(true); // 自動改行を有効化
-        termsTextArea.setWrapStyleWord(true); // 単語単位で改行
+        termsTextArea.setLineWrap(true); // Enable automatic line wrapping
+        termsTextArea.setWrapStyleWord(true); // Wrap at word boundaries
         termsTextArea.setText(getTermsAndConditions());
         
-        // 同意チェックボックス
+        // Agreement checkbox
         agreeCheckBox = new JCheckBox("I agree to the terms and conditions");
-        agreeCheckBox.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 14));
+        agreeCheckBox.setFont(new Font("Arial", Font.BOLD, 14));
         agreeCheckBox.setBackground(Color.WHITE);
         
-        // ボタン
+        // Buttons
         confirmButton = new JButton("Confirm Rental");
-        confirmButton.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 14));
+        confirmButton.setFont(new Font("Arial", Font.BOLD, 14));
         confirmButton.setBackground(new Color(70, 130, 180));
         confirmButton.setForeground(Color.BLACK);
         confirmButton.setFocusPainted(false);
         confirmButton.setPreferredSize(new Dimension(150, 40));
-        confirmButton.setEnabled(false); // 最初は無効
+        confirmButton.setEnabled(false); // Initially disabled
         
         cancelButton = new JButton("Cancel");
-        cancelButton.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 14));
+        cancelButton.setFont(new Font("Arial", Font.BOLD, 14));
         cancelButton.setBackground(new Color(220, 20, 60));
         cancelButton.setForeground(Color.BLACK);
         cancelButton.setFocusPainted(false);
@@ -159,30 +171,30 @@ public class RentalFrame extends JFrame {
     private void setupLayout() {
         setLayout(new BorderLayout());
         
-        // ヘッダーパネル
+        // Header panel
         JPanel headerPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         headerPanel.setBackground(new Color(245, 245, 245));
         headerPanel.setBorder(new EmptyBorder(15, 20, 15, 20));
         
         JLabel titleLabel = new JLabel("Costume Rental");
-        titleLabel.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 24));
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 24));
         titleLabel.setForeground(new Color(70, 130, 180));
         headerPanel.add(titleLabel);
         
-        // メインパネル
+        // Main panel
         JPanel mainPanel = new JPanel(new BorderLayout(20, 20));
         mainPanel.setBorder(new EmptyBorder(20, 30, 20, 30));
         
-        // 左パネル（衣装情報）
+        // Left panel (costume information)
         JPanel costumePanel = createCostumeInfoPanel();
         
-        // 右パネル（レンタル詳細）
+        // Right panel (rental details)
         JPanel rentalPanel = createRentalDetailsPanel();
         
         mainPanel.add(costumePanel, BorderLayout.WEST);
         mainPanel.add(rentalPanel, BorderLayout.CENTER);
         
-        // ボタンパネル
+        // Button panel
         JPanel buttonPanel = createButtonPanel();
         
         add(headerPanel, BorderLayout.NORTH);
@@ -196,14 +208,14 @@ public class RentalFrame extends JFrame {
             BorderFactory.createEtchedBorder(), "Costume Information",
             javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION,
             javax.swing.border.TitledBorder.DEFAULT_POSITION,
-            new Font(Font.SANS_SERIF, Font.BOLD, 14)));
+            new Font("Arial", Font.BOLD, 14)));
         panel.setPreferredSize(new Dimension(250, 400));
         
-        // 画像パネル
+        // Image panel
         JPanel imagePanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         imagePanel.add(costumeImageLabel);
         
-        // 情報パネル
+        // Information panel
         JPanel infoPanel = new JPanel(new GridLayout(0, 1, 5, 5));
         infoPanel.setBorder(new EmptyBorder(15, 15, 15, 15));
         
@@ -226,21 +238,21 @@ public class RentalFrame extends JFrame {
             BorderFactory.createEtchedBorder(), "Rental Details",
             javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION,
             javax.swing.border.TitledBorder.DEFAULT_POSITION,
-            new Font(Font.SANS_SERIF, Font.BOLD, 14)));
+            new Font("Arial", Font.BOLD, 14)));
         
-        // 上部：サイズ選択
+        // Top: Size selection
         JPanel sizePanel = createSizeSelectionPanel();
         
-        // 中央：レンタル期間選択
+        // Center: Rental period selection
         JPanel periodPanel = createRentalPeriodPanel();
         
-        // 下部：利用規約と料金表示をまとめる
+        // Bottom: Terms and price display combined
         JPanel termsPanel = createTermsPanel();
         JPanel costPanel = createCostPanel();
         JPanel bottomPanel = new JPanel();
         bottomPanel.setLayout(new BoxLayout(bottomPanel, BoxLayout.Y_AXIS));
         bottomPanel.add(termsPanel);
-        bottomPanel.add(Box.createVerticalStrut(10)); // 余白
+        bottomPanel.add(Box.createVerticalStrut(10)); // Spacing
         bottomPanel.add(costPanel);
         
         panel.add(sizePanel, BorderLayout.NORTH);
@@ -256,16 +268,16 @@ public class RentalFrame extends JFrame {
             BorderFactory.createEtchedBorder(), "Size Selection",
             javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION,
             javax.swing.border.TitledBorder.DEFAULT_POSITION,
-            new Font(Font.SANS_SERIF, Font.BOLD, 12)));
+            new Font("Arial", Font.BOLD, 12)));
         panel.setPreferredSize(new Dimension(400, 80));
         
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(8, 8, 8, 8);
         gbc.anchor = GridBagConstraints.WEST;
         
-        Font labelFont = new Font(Font.SANS_SERIF, Font.BOLD, 12);
+        Font labelFont = new Font("Arial", Font.BOLD, 12);
         
-        // サイズ選択
+        // Size selection
         gbc.gridx = 0; gbc.gridy = 0;
         JLabel sizeLabel = new JLabel("Select Size:");
         sizeLabel.setFont(labelFont);
@@ -274,7 +286,7 @@ public class RentalFrame extends JFrame {
         gbc.gridx = 1;
         panel.add(sizeComboBox, gbc);
         
-        // 選択されたサイズの在庫数
+        // Selected size stock count
         gbc.gridx = 0; gbc.gridy = 1;
         JLabel stockLabel = new JLabel("Available Stock:");
         stockLabel.setFont(labelFont);
@@ -293,9 +305,9 @@ public class RentalFrame extends JFrame {
         gbc.insets = new Insets(8, 8, 8, 8);
         gbc.anchor = GridBagConstraints.WEST;
         
-        Font labelFont = new Font(Font.SANS_SERIF, Font.BOLD, 12);
+        Font labelFont = new Font("Arial", Font.BOLD, 12);
         
-        // レンタル期間
+        // Rental period
         gbc.gridx = 0; gbc.gridy = 0;
         JLabel daysLabel = new JLabel("Rental Period:");
         daysLabel.setFont(labelFont);
@@ -304,19 +316,31 @@ public class RentalFrame extends JFrame {
         gbc.gridx = 1;
         JPanel daysInputPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         daysInputPanel.add(rentalDaysSpinner);
-        daysInputPanel.add(new JLabel(" days"));
+        JLabel daysUnitLabel = new JLabel(" days");
+        daysUnitLabel.setFont(new Font("Arial", Font.BOLD, 12));
+        daysInputPanel.add(daysUnitLabel);
         panel.add(daysInputPanel, gbc);
         
-        // 開始日
+        // Start date
         gbc.gridx = 0; gbc.gridy = 1;
         JLabel startLabel = new JLabel("Start Date:");
         startLabel.setFont(labelFont);
         panel.add(startLabel, gbc);
         
         gbc.gridx = 1;
-        panel.add(startDateSpinner, gbc);
+        JPanel datePanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 2, 0));
+        datePanel.add(yearSpinner);
+        JLabel yearLabel = new JLabel("/");
+        yearLabel.setFont(new Font("Arial", Font.BOLD, 12));
+        datePanel.add(yearLabel);
+        datePanel.add(monthSpinner);
+        JLabel monthLabel = new JLabel("/");
+        monthLabel.setFont(new Font("Arial", Font.BOLD, 12));
+        datePanel.add(monthLabel);
+        datePanel.add(daySpinner);
+        panel.add(datePanel, gbc);
         
-        // 返却予定日
+        // Expected return date
         gbc.gridx = 0; gbc.gridy = 2;
         JLabel endLabel = new JLabel("Return Date:");
         endLabel.setFont(labelFont);
@@ -334,16 +358,16 @@ public class RentalFrame extends JFrame {
             BorderFactory.createEtchedBorder(), "Terms and Conditions",
             javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION,
             javax.swing.border.TitledBorder.DEFAULT_POSITION,
-            new Font(Font.SANS_SERIF, Font.BOLD, 12)));
+            new Font("Arial", Font.BOLD, 12)));
         
         JScrollPane scrollPane = new JScrollPane(termsTextArea);
-        scrollPane.setPreferredSize(new Dimension(400, 100)); // 高さを小さくする
+        scrollPane.setPreferredSize(new Dimension(400, 100)); // Reduce height
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         
         panel.add(scrollPane, BorderLayout.CENTER);
         
-        // チェックボックスのカスタムパネル
+        // Custom checkbox panel
         JPanel checkPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         checkPanel.setBackground(Color.WHITE);
         checkPanel.setBorder(BorderFactory.createCompoundBorder(
@@ -351,7 +375,7 @@ public class RentalFrame extends JFrame {
             BorderFactory.createEmptyBorder(10, 20, 10, 20)
         ));
         
-        // チェックボックスのサイズをカスタマイズ
+        // Customize checkbox size
         agreeCheckBox.setIcon(createCustomCheckBoxIcon(false));
         agreeCheckBox.setSelectedIcon(createCustomCheckBoxIcon(true));
         agreeCheckBox.setFocusPainted(false);
@@ -365,10 +389,10 @@ public class RentalFrame extends JFrame {
     }
     
     /**
-     * カスタムチェックボックスアイコンを作成
+     * Create custom checkbox icon
      */
     private Icon createCustomCheckBoxIcon(boolean checked) {
-        int size = 20; // チェックボックスのサイズ
+        int size = 20; // Checkbox size
         
         return new Icon() {
             @Override
@@ -376,17 +400,17 @@ public class RentalFrame extends JFrame {
                 Graphics2D g2d = (Graphics2D) g.create();
                 g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 
-                // 外枠
+                // Outer border
                 g2d.setColor(Color.GRAY);
                 g2d.setStroke(new BasicStroke(2));
                 g2d.drawRect(x + 1, y + 1, size - 2, size - 2);
                 
-                // 背景
+                // Background
                 if (checked) {
                     g2d.setColor(new Color(70, 130, 180));
                     g2d.fillRect(x + 2, y + 2, size - 3, size - 3);
                     
-                    // チェックマーク
+                    // Check mark
                     g2d.setColor(Color.WHITE);
                     g2d.setStroke(new BasicStroke(2, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
                     int[] checkX = {x + 5, x + 8, x + 15};
@@ -420,7 +444,7 @@ public class RentalFrame extends JFrame {
             BorderFactory.createEtchedBorder(), "Total Cost",
             javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION,
             javax.swing.border.TitledBorder.DEFAULT_POSITION,
-            new Font(Font.SANS_SERIF, Font.BOLD, 14)));
+            new Font("Arial", Font.BOLD, 14)));
         
         panel.add(totalCostLabel);
         
@@ -439,7 +463,7 @@ public class RentalFrame extends JFrame {
     }
     
     private void setupEventListeners() {
-        // サイズ変更時のイベントリスナー
+        // Size change event listener
         sizeComboBox.addActionListener(e -> {
             String selectedSize = (String) sizeComboBox.getSelectedItem();
             if (selectedSize == null) {
@@ -449,36 +473,43 @@ public class RentalFrame extends JFrame {
             updateSelectedSizeStock();
             updateConfirmButtonState();
 
-            // --- ここからロジックを変更 ---
-            // カレンダーがまだ作られていないか、非表示の場合
+            // Calendar display logic
+            // If calendar is not created or not visible
             if (calendarDialog == null || !calendarDialog.isVisible()) {
                 calendarDialog = new ReserveCalendar(this, selectedCostume.getCostumeId(), selectedSize);
                 
-                // RentalFrameの右側に表示されるように位置を設定
+                // Position to the right of RentalFrame
                 Point location = this.getLocation();
                 calendarDialog.setLocation(location.x + this.getWidth(), location.y);
-                // サイズをさらに小さく設定
+                // Set smaller size
                 calendarDialog.setSize(350, 350); 
                 calendarDialog.setVisible(true);
             } else {
-                // 既に表示されている場合は、新しい情報でカレンダーを更新
+                // If already displayed, update with new information
                 calendarDialog.updateData(selectedCostume.getCostumeId(), selectedSize);
-                // ウィンドウを最前面に移動
+                // Bring to front
                 calendarDialog.toFront();
             }
-            // --- ここまで変更 ---
         });
 
-        // レンタル期間変更時の料金更新
+        // Rental period change price update
         rentalDaysSpinner.addChangeListener(e -> updatePriceCalculation());
         
-        // 開始日変更時の料金更新
-        startDateSpinner.addChangeListener(e -> updatePriceCalculation());
+        // Start date change price update
+        yearSpinner.addChangeListener(e -> {
+            adjustDaySpinnerForMonth();
+            updatePriceCalculation();
+        });
+        monthSpinner.addChangeListener(e -> {
+            adjustDaySpinnerForMonth();
+            updatePriceCalculation();
+        });
+        daySpinner.addChangeListener(e -> updatePriceCalculation());
         
-        // 同意チェックボックス
+        // Agreement checkbox
         agreeCheckBox.addActionListener(e -> updateConfirmButtonState());
         
-        // 確認ボタン
+        // Confirm button
         confirmButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -486,7 +517,7 @@ public class RentalFrame extends JFrame {
             }
         });
         
-        // キャンセルボタン
+        // Cancel button
         cancelButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -496,23 +527,23 @@ public class RentalFrame extends JFrame {
     }
     
     private void updateCostumeInfo() {
-        // 衣装名
+        // Costume name
         costumeNameLabel.setText("<html><b>" + selectedCostume.getCostumeName() + "</b></html>");
         
-        // イベント
+        // Event
         costumeEventLabel.setText("Event: " + selectedCostume.getEventDisplayName());
         
-        // 利用可能なサイズを表示
+        // Display available sizes
         StringBuilder sizeInfo = new StringBuilder("Available Sizes: ");
         for (String size : selectedCostume.getAvailableSizes()) {
             sizeInfo.append(size).append(" (").append(selectedCostume.getStockForSize(size)).append("), ");
         }
         if (sizeInfo.length() > 0) {
-            sizeInfo.setLength(sizeInfo.length() - 2); // 最後のカンマとスペースを削除
+            sizeInfo.setLength(sizeInfo.length() - 2); // Remove last comma and space
         }
         costumeSizeLabel.setText(sizeInfo.toString());
         
-        // 総在庫数
+        // Total stock
         int totalStock = selectedCostume.getTotalStock();
         costumeStockLabel.setText("Total Stock: " + totalStock);
         if (totalStock <= 2) {
@@ -521,34 +552,32 @@ public class RentalFrame extends JFrame {
             costumeStockLabel.setForeground(new Color(0, 128, 0));
         }
         
-        // 日額料金
+        // Daily rate
         double dailyRate = selectedCostume.getPrice() * DAILY_RATE_MULTIPLIER;
         dailyRateLabel.setText("Daily Rate: $" + String.format("%.2f", dailyRate));
         
-        // サイズ選択コンボボックスを設定
+        // Setup size selection combo box
         setupSizeComboBox();
         
-        // 画像読み込み
+        // Load image
         loadCostumeImage();
     }
     
     private void setupSizeComboBox() {
         sizeComboBox.removeAllItems();
         
-        // 利用可能なサイズをコンボボックスに追加
+        // Add available sizes to combo box
         for (String size : selectedCostume.getAvailableSizes()) {
             if (selectedCostume.getStockForSize(size) > 0) {
                 sizeComboBox.addItem(size);
             }
         }
         
-        // 最初のサイズを選択
+        // Select first size
         if (sizeComboBox.getItemCount() > 0) {
             sizeComboBox.setSelectedIndex(0);
             updateSelectedSizeStock();
         }
-        
-
     }
 
     private void updateSelectedSizeStock() {
@@ -557,7 +586,7 @@ public class RentalFrame extends JFrame {
             int stock = selectedCostume.getStockForSize(selectedSize);
             selectedSizeStockLabel.setText(selectedSize + ": " + stock + " available");
             
-            // 在庫が少ない場合は色を変更
+            // Change color if stock is low
             if (stock <= 2) {
                 selectedSizeStockLabel.setForeground(new Color(255, 69, 0));
             } else {
@@ -583,26 +612,48 @@ public class RentalFrame extends JFrame {
         }
     }
     
+    /**
+     * Adjust day spinner maximum value based on selected year and month
+     */
+    private void adjustDaySpinnerForMonth() {
+        int year = (Integer) yearSpinner.getValue();
+        int month = (Integer) monthSpinner.getValue();
+        int currentDay = (Integer) daySpinner.getValue();
+        
+        // Get maximum days for the selected month
+        LocalDate tempDate = LocalDate.of(year, month, 1);
+        int maxDays = tempDate.lengthOfMonth();
+        
+        // Update day spinner model
+        SpinnerNumberModel dayModel = new SpinnerNumberModel(
+            Math.min(currentDay, maxDays), 1, maxDays, 1
+        );
+        daySpinner.setModel(dayModel);
+    }
+    
+    /**
+     * Get LocalDate from individual spinners
+     */
+    private LocalDate getSelectedDate() {
+        int year = (Integer) yearSpinner.getValue();
+        int month = (Integer) monthSpinner.getValue();
+        int day = (Integer) daySpinner.getValue();
+        return LocalDate.of(year, month, day);
+    }
+    
     private void updatePriceCalculation() {
         int days = (Integer) rentalDaysSpinner.getValue();
         
-        // 選択された開始日を取得
-        java.util.Date selectedDate = (java.util.Date) startDateSpinner.getValue();
-        java.util.Calendar cal = java.util.Calendar.getInstance();
-        cal.setTime(selectedDate);
-        LocalDate startDate = LocalDate.of(
-            cal.get(java.util.Calendar.YEAR),
-            cal.get(java.util.Calendar.MONTH) + 1,
-            cal.get(java.util.Calendar.DAY_OF_MONTH)
-        );
+        // Get selected start date from individual spinners
+        LocalDate startDate = getSelectedDate();
         LocalDate endDate = startDate.plusDays(days - 1);
         
-        // 日付表示更新
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd (E)");
+        // Update date display
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd (EEE)", java.util.Locale.ENGLISH);
         startDateLabel.setText(startDate.format(formatter));
         endDateLabel.setText(endDate.format(formatter));
         
-        // 料金計算
+        // Calculate price
         double dailyRate = selectedCostume.getPrice() * DAILY_RATE_MULTIPLIER;
         double totalCost = dailyRate * days;
         
@@ -627,39 +678,30 @@ public class RentalFrame extends JFrame {
         
         String selectedSize = (String) sizeComboBox.getSelectedItem();
         if (selectedSize == null) {
-            // このケースは通常発生しないが念のため
+            // This case normally doesn't occur but just in case
             return;
         }
 
         try {
-            // レンタル期間を計算
+            // Calculate rental period
             int days = (Integer) rentalDaysSpinner.getValue();
-            java.util.Date selectedDate = (java.util.Date) startDateSpinner.getValue();
-            java.util.Calendar cal = java.util.Calendar.getInstance();
-            cal.setTime(selectedDate);
-            LocalDate startDate = LocalDate.of(
-                cal.get(java.util.Calendar.YEAR),
-                cal.get(java.util.Calendar.MONTH) + 1,
-                cal.get(java.util.Calendar.DAY_OF_MONTH)
-            );
+            LocalDate startDate = getSelectedDate();
             LocalDate endDate = startDate.plusDays(days - 1);
 
-            // --- ここから追加 ---
-            // 選択された期間の在庫をチェック
+            // Check stock availability for selected period
             boolean isAvailable = FileIO.getInstance().isStockAvailableForPeriod(selectedCostume.getCostumeId(), selectedSize, startDate, endDate);
             if (!isAvailable) {
                 JOptionPane.showMessageDialog(this,
                     "The selected period includes dates with no stock available.\nPlease check the stock calendar and select a different period.",
                     "Stock Unavailable",
                     JOptionPane.ERROR_MESSAGE);
-                return; // 在庫がないので処理を中断
+                return; // Stop processing due to no stock
             }
-            // --- ここまで追加 ---
 
             double dailyRate = selectedCostume.getPrice() * DAILY_RATE_MULTIPLIER;
             double totalCost = dailyRate * days;
             
-            // レンタル作成
+            // Create rental
             boolean success = rentalService.createRental(
                 currentMemberId,
                 selectedCostume.getCostumeId(),
@@ -670,7 +712,7 @@ public class RentalFrame extends JFrame {
             );
             
             if (success) {
-                // 成功メッセージ
+                // Success message
                 String message = String.format(
                     "Rental confirmed successfully!\n\n" +
                     "Costume: %s\n" +
@@ -689,7 +731,7 @@ public class RentalFrame extends JFrame {
                     "Rental Confirmed",
                     JOptionPane.INFORMATION_MESSAGE);
                 
-                dispose(); // ウィンドウを閉じる
+                dispose(); // Close window
                 
             } else {
                 JOptionPane.showMessageDialog(this,
@@ -710,7 +752,7 @@ public class RentalFrame extends JFrame {
     private void setupFrame() {
         setTitle("Costume Rental - " + selectedCostume.getCostumeName());
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setSize(700, 700); // 高さを100px増加
+        setSize(700, 700); // Increase height by 100px
         setLocationRelativeTo(null);
         setResizable(false);
     }

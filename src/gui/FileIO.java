@@ -218,6 +218,58 @@ public class FileIO {
     }
 
     /**
+     * アクティブなレンタル数を取得します
+     * @return アクティブなレンタル数
+     */
+    public int getActiveRentalsCount() {
+        try {
+            List<String> lines = Files.readAllLines(rentalsPath, StandardCharsets.UTF_8);
+            int count = 0;
+            
+            for (String line : lines) {
+                if (line.startsWith("#") || line.trim().isEmpty()) continue;
+                
+                String[] values = line.split(",");
+                if (values.length >= 10) {
+                    String status = values[9].trim();
+                    if ("ACTIVE".equals(status)) {
+                        count++;
+                    }
+                }
+            }
+            return count;
+        } catch (IOException e) {
+            System.err.println("Error reading rentals file: " + e.getMessage());
+            return 0;
+        }
+    }
+    
+    /**
+     * 利用可能なコスチューム数（種類数）を取得します
+     * @return 利用可能なコスチューム数
+     */
+    public int getAvailableCostumesCount() {
+        try {
+            List<String> lines = Files.readAllLines(costumesPath, StandardCharsets.UTF_8);
+            int count = 0;
+            
+            for (String line : lines) {
+                if (line.startsWith("#") || line.trim().isEmpty()) continue;
+                
+                String[] values = line.split(",");
+                if (values.length > 4) {
+                    // コスチュームの行をカウント
+                    count++;
+                }
+            }
+            return count;
+        } catch (IOException e) {
+            System.err.println("Error reading costumes file: " + e.getMessage());
+            return 0;
+        }
+    }
+
+    /**
      * ログイン認証
      */
     public boolean isValidLogin(String memberId, String password) {

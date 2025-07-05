@@ -11,15 +11,17 @@ public class MainFrame extends JFrame {
     private String currentMemberId;
     private JLabel welcomeLabel;
     private JLabel timeLabel;
+    private JLabel statsLabel; // 統計情報ラベルをフィールドに追加
     private JButton searchButton;
     private JButton myRentalsButton;
-    private JButton reservationsButton;
     private JButton accountButton;
     private JButton logoutButton;
     private Timer clockTimer;
+    private FileIO fileIO; // FileIOインスタンスを追加
     
     public MainFrame(String memberId) {
         this.currentMemberId = memberId;
+        this.fileIO = FileIO.getInstance(); // FileIOインスタンスを取得
         initializeComponents();
         setupLayout();
         setupEventListeners();
@@ -41,47 +43,97 @@ public class MainFrame extends JFrame {
         // メインメニューボタン
         searchButton = new JButton("Search Costumes");
         myRentalsButton = new JButton("My Rentals");
-        reservationsButton = new JButton("My Reservations");
         accountButton = new JButton("Account Settings");
         logoutButton = new JButton("Logout");
         
         // ボタンのスタイル設定
         setupButtonStyle(searchButton, new Color(70, 130, 180));
         setupButtonStyle(myRentalsButton, new Color(60, 179, 113));
-        setupButtonStyle(reservationsButton, new Color(255, 165, 0));
         setupButtonStyle(accountButton, new Color(147, 112, 219));
         setupButtonStyle(logoutButton, new Color(220, 20, 60));
         
         // すべてのボタンのフォーカスを無効化（点滅停止）
         searchButton.setFocusable(false);
         myRentalsButton.setFocusable(false);
-        reservationsButton.setFocusable(false);
         accountButton.setFocusable(false);
         logoutButton.setFocusable(false);
         
-        // ボタンサイズを統一
+        // ボタンサイズを統一（より大きく設定）
         Dimension buttonSize = new Dimension(200, 50);
         searchButton.setPreferredSize(buttonSize);
+        searchButton.setMinimumSize(buttonSize);
+        searchButton.setMaximumSize(buttonSize);
+        
         myRentalsButton.setPreferredSize(buttonSize);
-        reservationsButton.setPreferredSize(buttonSize);
+        myRentalsButton.setMinimumSize(buttonSize);
+        myRentalsButton.setMaximumSize(buttonSize);
+        
         accountButton.setPreferredSize(buttonSize);
+        accountButton.setMinimumSize(buttonSize);
+        accountButton.setMaximumSize(buttonSize);
+        
         logoutButton.setPreferredSize(buttonSize);
+        logoutButton.setMinimumSize(buttonSize);
+        logoutButton.setMaximumSize(buttonSize);
         
         // ツールチップの設定
         searchButton.setToolTipText("Browse and search available costumes");
         myRentalsButton.setToolTipText("View your current and past rentals");
-        reservationsButton.setToolTipText("Manage your costume reservations");
         accountButton.setToolTipText("Update your profile information");
         logoutButton.setToolTipText("Sign out from the system");
+
+        // --- ここから追加 ---
+        // 各ボタンにホバーエフェクトを追加
+        addHoverEffect(searchButton);
+        addHoverEffect(myRentalsButton);
+        addHoverEffect(accountButton);
+        addHoverEffect(logoutButton);
+        // --- ここまで追加 ---
     }
     
     private void setupButtonStyle(JButton button, Color backgroundColor) {
         button.setBackground(backgroundColor);
-        button.setForeground(Color.BLACK);
-        button.setFont(new Font("Arial", Font.BOLD, 16));
+        button.setForeground(Color.BLACK); // 文字色を黒に変更
+        button.setFont(new Font("Arial", Font.BOLD, 14));
         button.setFocusPainted(false);
         button.setBorder(BorderFactory.createRaisedBevelBorder());
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        button.setOpaque(true); // 背景色を確実に表示
+    }
+
+    /**
+     * ボタンにマウスホバー時の拡大エフェクトを追加します。
+     * @param button エフェクトを適用するボタン
+     */
+    private void addHoverEffect(JButton button) {
+        Dimension originalSize = new Dimension(200, 50);
+        Dimension hoverSize = new Dimension(220, 55);
+
+        button.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                button.setPreferredSize(hoverSize);
+                button.setMinimumSize(hoverSize);
+                button.setMaximumSize(hoverSize);
+                button.revalidate();
+                if (button.getParent() != null) {
+                    button.getParent().revalidate();
+                    button.getParent().repaint();
+                }
+            }
+
+            @Override
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                button.setPreferredSize(originalSize);
+                button.setMinimumSize(originalSize);
+                button.setMaximumSize(originalSize);
+                button.revalidate();
+                if (button.getParent() != null) {
+                    button.getParent().revalidate();
+                    button.getParent().repaint();
+                }
+            }
+        });
     }
     
     private void setupLayout() {
@@ -113,43 +165,39 @@ public class MainFrame extends JFrame {
         // ウェルカムパネル
         JPanel welcomePanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         welcomePanel.setBackground(Color.WHITE);
-        welcomePanel.setBorder(BorderFactory.createEmptyBorder(30, 20, 20, 20));
+        welcomePanel.setBorder(BorderFactory.createEmptyBorder(15, 20, 10, 20)); // 上下の余白を狭く
         welcomePanel.add(welcomeLabel);
         
         // メインメニューパネル
-        JPanel menuPanel = new JPanel(new GridBagLayout());
+        JPanel menuPanel = new JPanel();
+        menuPanel.setLayout(new BoxLayout(menuPanel, BoxLayout.Y_AXIS));
         menuPanel.setBackground(Color.WHITE);
-        menuPanel.setBorder(BorderFactory.createEmptyBorder(20, 50, 30, 50));
+        menuPanel.setBorder(BorderFactory.createEmptyBorder(10, 50, 30, 50)); // 上の余白を狭く
         
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(15, 10, 15, 10);
-        gbc.fill = GridBagConstraints.HORIZONTAL;
+        // ボタンを中央揃えで追加
+        searchButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        myRentalsButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        accountButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        logoutButton.setAlignmentX(Component.CENTER_ALIGNMENT);
         
-        // 2列レイアウトでボタンを配置
-        gbc.gridx = 0; gbc.gridy = 0;
-        menuPanel.add(searchButton, gbc);
+        menuPanel.add(Box.createVerticalStrut(5)); // 上の余白を狭く
+        menuPanel.add(searchButton);
+        menuPanel.add(Box.createVerticalStrut(15)); // ボタン間の余白
+        menuPanel.add(myRentalsButton);
+        menuPanel.add(Box.createVerticalStrut(15));
+        menuPanel.add(accountButton);
+        menuPanel.add(Box.createVerticalStrut(25)); // ログアウトボタンの前に大きめの余白
+        menuPanel.add(logoutButton);
+        menuPanel.add(Box.createVerticalStrut(10)); // 下の余白
         
-        gbc.gridx = 1; gbc.gridy = 0;
-        menuPanel.add(myRentalsButton, gbc);
-        
-        gbc.gridx = 0; gbc.gridy = 1;
-        menuPanel.add(reservationsButton, gbc);
-        
-        gbc.gridx = 1; gbc.gridy = 1;
-        menuPanel.add(accountButton, gbc);
-        
-        // ログアウトボタンは中央に配置
-        gbc.gridx = 0; gbc.gridy = 2;
-        gbc.gridwidth = 2;
-        gbc.insets = new Insets(30, 10, 15, 10);
-        menuPanel.add(logoutButton, gbc);
-        
-        // 統計情報パネル（今後の拡張用）
         JPanel statsPanel = createStatsPanel();
         
         // フレームに追加
-        add(headerPanel, BorderLayout.NORTH);
-        add(welcomePanel, BorderLayout.CENTER);
+        JPanel topPanel = new JPanel(new BorderLayout());
+        topPanel.add(headerPanel, BorderLayout.NORTH);
+        topPanel.add(welcomePanel, BorderLayout.CENTER);
+        
+        add(topPanel, BorderLayout.NORTH);
         add(menuPanel, BorderLayout.CENTER);
         add(statsPanel, BorderLayout.SOUTH);
     }
@@ -159,59 +207,33 @@ public class MainFrame extends JFrame {
         statsPanel.setBackground(new Color(240, 248, 255));
         statsPanel.setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
         
-        // 統計情報ラベル（後で実装）
-        JLabel statsLabel = new JLabel("System Status: Online | Active Rentals: -- | Available Costumes: --");
+        // 統計情報ラベル（実際の数値を表示）
+        statsLabel = new JLabel();
         statsLabel.setFont(new Font("Arial", Font.PLAIN, 12));
         statsLabel.setForeground(Color.GRAY);
+        updateStatsLabel(); // 初期値を設定
         
         statsPanel.add(statsLabel);
         return statsPanel;
     }
     
     private void setupEventListeners() {
-        searchButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                openCostumeSearch();
-            }
-        });
+        searchButton.addActionListener(e -> openCostumeSearch());
         
-        myRentalsButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                openMyRentals();
-            }
-        });
+        myRentalsButton.addActionListener(e -> openMyRentals());
         
-        reservationsButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                openReservations();
-            }
-        });
+        accountButton.addActionListener(e -> openAccountSettings());
         
-        accountButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                openAccountSettings();
-            }
-        });
-        
-        logoutButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                handleLogout();
-            }
-        });
+        logoutButton.addActionListener(e -> handleLogout());
     }
     
     private void setupFrame() {
         setTitle("Costume Rental System - Main Menu");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(600, 500);
+        setSize(540, 560); // 高さを500から420に変更
         setLocationRelativeTo(null); // 画面中央に配置
         setResizable(true);
-        setMinimumSize(new Dimension(500, 400));
+        setMinimumSize(new Dimension(500, 350)); // 最小サイズも調整
     }
     
     private void startClock() {
@@ -220,6 +242,7 @@ public class MainFrame extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 updateTimeLabel();
+                updateStatsLabel(); // 統計情報も定期的に更新
             }
         });
         clockTimer.start();
@@ -229,6 +252,22 @@ public class MainFrame extends JFrame {
         LocalDateTime now = LocalDateTime.now();
         String timeText = now.format(DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss"));
         timeLabel.setText(timeText);
+    }
+    
+    /**
+     * 統計情報ラベルを更新します
+     */
+    private void updateStatsLabel() {
+        try {
+            int activeRentals = fileIO.getActiveRentalsCount();
+            int availableCostumes = fileIO.getAvailableCostumesCount();
+            
+            String statsText = String.format("System Status: Online | Active Rentals: %d | Available Costumes: %d", 
+                                            activeRentals, availableCostumes);
+            statsLabel.setText(statsText);
+        } catch (Exception e) {
+            statsLabel.setText("System Status: Online | Active Rentals: -- | Available Costumes: --");
+        }
     }
     
     // 各機能を開くメソッド
@@ -247,22 +286,6 @@ public class MainFrame extends JFrame {
             rentalsFrame.setVisible(true);
         } catch (Exception e) {
             showErrorMessage("Failed to open rentals: " + e.getMessage());
-        }
-    }
-    
-    private void openReservations() {
-        try {
-            // TODO: ReservationsFrameを実装後に有効化
-            // ReservationsFrame reservationsFrame = new ReservationsFrame(currentMemberId);
-            // reservationsFrame.setVisible(true);
-            
-            // 一時的なメッセージ
-            JOptionPane.showMessageDialog(this,
-                "Reservations feature will be implemented next.",
-                "Feature Coming Soon",
-                JOptionPane.INFORMATION_MESSAGE);
-        } catch (Exception e) {
-            showErrorMessage("Failed to open reservations: " + e.getMessage());
         }
     }
     

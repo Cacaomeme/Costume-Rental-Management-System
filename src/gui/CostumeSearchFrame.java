@@ -7,6 +7,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Map; // 追加
 
 /**
  * 衣装の検索・閲覧用フレーム
@@ -22,11 +23,13 @@ public class CostumeSearchFrame extends JFrame {
     private JScrollPane scrollPane;
     
     private CostumeDataManager dataManager;
+    private FileIO fileIO; // 追加
     private List<Costume> allCostumes;
     private List<Costume> filteredCostumes;
 
     public CostumeSearchFrame(String memberId) {
         this.currentMemberId = memberId;
+        this.fileIO = FileIO.getInstance(); // 追加
         initializeComponents();
         loadCostumeData();
         setupLayout();
@@ -244,6 +247,47 @@ public class CostumeSearchFrame extends JFrame {
         sizeComboBox.addActionListener(e -> performSearch());
     }
 
+    // --- ここから追加 ---
+    /**
+     * 指定した衣装とサイズの今日の利用可能在庫数を取得
+     */
+    private int getAvailableStock(String costumeId, String size) {
+        int maxStock = fileIO.getCostumeStock(costumeId, size);
+        if (maxStock <= 0) {
+            return 0;
+        }
+        
+        // 今日の日付でレンタル中の数を取得
+        java.time.LocalDate today = java.time.LocalDate.now();
+        Map<java.time.LocalDate, Integer> reservationCounts = fileIO.getReservationCounts(costumeId, size);
+        int reservedToday = reservationCounts.getOrDefault(today, 0);
+        
+        return Math.max(0, maxStock - reservedToday);
+    }
+    
+    /**
+     * 衣装が利用可能な在庫を持っているかチェック
+     */
+    private boolean hasAvailableStock(Costume costume) {
+        for (String size : costume.getAvailableSizes()) {
+            int availableStock = getAvailableStock(costume.getCostumeId(), size);
+            if (availableStock > 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    /**
+     * 在庫情報を更新
+     */
+    public void refreshStock() {
+        SwingUtilities.invokeLater(() -> {
+            performSearch(); // 現在の検索条件で再表示
+        });
+    }
+    // --- ここまで追加 ---
+
     private void performSearch() {
         String searchText = searchField.getText().toLowerCase().trim();
         CostumeEvent selectedEvent = (CostumeEvent) eventComboBox.getSelectedItem();
@@ -287,8 +331,10 @@ public class CostumeSearchFrame extends JFrame {
             // 価格範囲フィルター
             matches &= costume.getPrice() >= minPrice && costume.getPrice() <= maxPrice;
             
-            // 在庫確認
-            matches &= costume.getStock() > 0;
+            // --- 在庫確認の修正 ---
+            // 実際の利用可能在庫をチェック
+            matches &= hasAvailableStock(costume);
+            // --- 修正ここまで ---
             
             if (matches) {
                 filteredCostumes.add(costume);
@@ -380,17 +426,18 @@ public class CostumeSearchFrame extends JFrame {
         priceLabel.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 12));
         priceLabel.setForeground(new Color(0, 128, 0)); // 緑色で価格を強調
         
-        // サイズと在庫をまとめて表示
+        // --- サイズと在庫表示の修正 ---
         StringBuilder sizeStockInfo = new StringBuilder();
         for (String size : costume.getAvailableSizes()) {
-            int stock = costume.getStockForSize(size);
-            sizeStockInfo.append(size).append("(").append(stock).append("), ");
+            int availableStock = getAvailableStock(costume.getCostumeId(), size);
+            sizeStockInfo.append(size).append("(").append(availableStock).append("), ");
         }
         if (sizeStockInfo.length() > 0) {
             sizeStockInfo.setLength(sizeStockInfo.length() - 2); // 最後のカンマを削除
         }
-        JLabel sizeLabel = new JLabel("Size: " + sizeStockInfo.toString());
+        JLabel sizeLabel = new JLabel("Available: " + sizeStockInfo.toString());
         sizeLabel.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 12));
+        // --- 修正ここまで ---
         
         infoPanel.add(nameLabel);
         infoPanel.add(eventLabel);
@@ -413,6 +460,17 @@ public class CostumeSearchFrame extends JFrame {
             try {
                 // レンタル画面を開く
                 RentalFrame rentalFrame = new RentalFrame(currentMemberId, costume);
+                
+                // --- ここから追加: RentalFrameのウィンドウクローズを監視 ---
+                rentalFrame.addWindowListener(new java.awt.event.WindowAdapter() {
+                    @Override
+                    public void windowClosed(java.awt.event.WindowEvent e) {
+                        // RentalFrameが閉じられた時に在庫を更新
+                        refreshStock();
+                    }
+                });
+                // --- ここまで追加 ---
+                
                 rentalFrame.setVisible(true);
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(this,

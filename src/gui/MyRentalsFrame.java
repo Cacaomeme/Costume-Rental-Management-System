@@ -60,6 +60,15 @@ public class MyRentalsFrame extends JFrame {
         rentalHistory = new ArrayList<>();
         allCostumes = costumeManager.loadCostumes();
         
+        // ★ ここから追加: 延滞金を動的に計算
+        for (Rental rental : activeRentals) {
+            if (rental.getStatus() == Rental.RentalStatus.OVERDUE) {
+                double calculatedLateFee = rental.calculateLateFee();
+                rental.setLateFee(calculatedLateFee);
+            }
+        }
+        // ★ ここまで追加
+        
         // 履歴（返却済み・キャンセル済み）を取得
         for (Rental rental : allRentals) {
             if (rental.getStatus() == Rental.RentalStatus.RETURNED || 
@@ -75,15 +84,21 @@ public class MyRentalsFrame extends JFrame {
         tabbedPane.setFont(new Font("Arial", Font.BOLD, 14));
         
         // アクティブレンタルテーブル
-        String[] activeColumns = {"Costume", "Event", "Size", "Start Date", "Return Date", "Days Left", "Status", "Cost"};
+        // ★ 列に "Action" を追加
+        String[] activeColumns = {"Costume", "Event", "Size", "Start Date", "Return Date", "Days Left", "Status", "Cost", "Action"};
         activeTableModel = new DefaultTableModel(activeColumns, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
-                return false; // テーブルを読み取り専用に
+                // ★ "Action" 列のみ編集可能にする
+                return column == 8;
             }
         };
         activeRentalsTable = new JTable(activeTableModel);
         setupTable(activeRentalsTable);
+        
+        // ★ "Action" 列にボタンレンダラーとエディターを設定
+        activeRentalsTable.getColumn("Action").setCellRenderer(new ButtonRenderer());
+        activeRentalsTable.getColumn("Action").setCellEditor(new ButtonEditor(new JCheckBox()));
         
         // 履歴テーブル
         String[] historyColumns = {"Costume", "Event", "Rental Period", "Returned Date", "Status", "Total Cost"};
@@ -312,7 +327,9 @@ public class MyRentalsFrame extends JFrame {
                 rental.getFormattedReturnDate(),
                 daysLeftStr,
                 rental.getStatus().getDisplayName(),
-                "$" + String.format("%.2f", rental.getTotalPayment())
+                "$" + String.format("%.2f", rental.getTotalPayment()),
+                // ★ ボタンのテキストを設定（RESERVEDを追加）
+                getActionButtonText(rental.getStatus())
             };
             activeTableModel.addRow(row);
         }
@@ -345,8 +362,9 @@ public class MyRentalsFrame extends JFrame {
         // 総レンタル数
         totalRentalsLabel.setText(String.valueOf(allRentals.size()));
         
-        // 総費用
+        // 総費用（キャンセルされたレンタルは除外）
         double totalCost = allRentals.stream()
+                .filter(rental -> rental.getStatus() != Rental.RentalStatus.CANCELLED) // ★ キャンセルを除外
                 .mapToDouble(Rental::getTotalPayment)
                 .sum();
         totalCostLabel.setText("$" + String.format("%.2f", totalCost));
@@ -373,31 +391,41 @@ public class MyRentalsFrame extends JFrame {
         Costume costume = findCostumeById(rental.getCostumeId());
         String costumeName = (costume != null) ? costume.getCostumeName() : "Unknown Costume";
         
+        String rentalPeriod = rental.getFormattedRentalDate() + " to " + rental.getFormattedReturnDate();
+        
+        // ★ キャンセルされたレンタルの場合の表示を調整
+        String totalPaymentText;
+        if (rental.getStatus() == Rental.RentalStatus.CANCELLED) {
+            totalPaymentText = "$0.00 (Cancelled - No charge)";
+        } else {
+            totalPaymentText = String.format("$%.2f", rental.getTotalPayment());
+        }
+        
         String details = String.format(
             "Rental Details:\n\n" +
             "Rental ID: %s\n" +
             "Costume: %s\n" +
-            "Event: %s\n" +
             "Size: %s\n" +
-            "Rental Period: %s to %s\n" +
+            "Rental Period: %s\n" +
             "Actual Return: %s\n" +
-            "Status: %s\n" +
+            "Status: %s\n\n" +
+            "Financial Details:\n" +
             "Basic Cost: $%.2f\n" +
             "Late Fee: $%.2f\n" +
-            "Total Payment: $%.2f\n" +
+            "Total Payment: %s\n" +
+            "Daily Rate: $%.2f\n" +
             "Rental Days: %d\n" +
             "Overdue Days: %d",
             rental.getRentalId(),
             costumeName,
-            (costume != null) ? costume.getEventDisplayName() : "Unknown",
-            (costume != null) ? costume.getSize() : "Unknown",
-            rental.getFormattedRentalDate(),
-            rental.getFormattedReturnDate(),
+            rental.getSize(),
+            rentalPeriod,
             rental.getFormattedActualReturnDate(),
             rental.getStatus().getDisplayName(),
-            rental.getTotalCost(),
-            rental.getLateFee(),
-            rental.getTotalPayment(),
+            rental.getStatus() == Rental.RentalStatus.CANCELLED ? 0.0 : rental.getTotalCost(), // ★ キャンセル時は0
+            rental.getStatus() == Rental.RentalStatus.CANCELLED ? 0.0 : rental.getLateFee(),   // ★ キャンセル時は0
+            totalPaymentText, // ★ 修正した表示
+            rental.getDailyRate(),
             rental.getRentalDays(),
             rental.getOverdueDays()
         );
@@ -411,6 +439,20 @@ public class MyRentalsFrame extends JFrame {
         JOptionPane.showMessageDialog(this, "Data refreshed successfully!", "Refresh", JOptionPane.INFORMATION_MESSAGE);
     }
     
+    // ★ ここから追加: ボタンテキスト取得メソッド
+    private String getActionButtonText(Rental.RentalStatus status) {
+        switch (status) {
+            case RESERVED:
+                return "Cancel";
+            case ACTIVE:
+            case OVERDUE:
+                return "Return";
+            default:
+                return ""; // RETURNED, CANCELLED の場合はボタンなし
+        }
+    }
+    // ★ ここまで追加
+
     private void setupFrame() {
         setTitle("My Rentals - " + currentMemberId);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -418,6 +460,89 @@ public class MyRentalsFrame extends JFrame {
         setLocationRelativeTo(null);
         setResizable(true);
         setMinimumSize(new Dimension(800, 500));
+    }
+    
+    // ★ ここから下をクラスの末尾に追加
+    
+    /**
+     * ボタンをレンダリングするためのクラス
+     */
+    class ButtonRenderer extends JButton implements TableCellRenderer {
+        public ButtonRenderer() {
+            setOpaque(true);
+        }
+
+        @Override
+        public Component getTableCellRendererComponent(JTable table, Object value,
+                                                     boolean isSelected, boolean hasFocus, int row, int column) {
+            setText((value == null) ? "" : value.toString());
+            return this;
+        }
+    }
+
+    /**
+     * ボタンクリックを処理するためのエディタークラス
+     */
+    class ButtonEditor extends DefaultCellEditor {
+        protected JButton button;
+        private String label;
+        private boolean isPushed;
+
+        public ButtonEditor(JCheckBox checkBox) {
+            super(checkBox);
+            button = new JButton();
+            button.setOpaque(true);
+            button.addActionListener(e -> fireEditingStopped());
+        }
+
+        @Override
+        public Component getTableCellEditorComponent(JTable table, Object value,
+                                                      boolean isSelected, int row, int column) {
+            label = (value == null) ? "" : value.toString();
+            button.setText(label);
+            isPushed = true;
+            return button;
+        }
+
+        @Override
+        public Object getCellEditorValue() {
+            if (isPushed) {
+                int selectedRow = activeRentalsTable.getSelectedRow();
+                if (selectedRow != -1) {
+                    Rental rental = activeRentals.get(selectedRow);
+                    if ("Return".equals(label)) {
+                        // 返却処理
+                        int confirm = JOptionPane.showConfirmDialog(MyRentalsFrame.this,
+                                "Are you sure you want to return this costume?", "Confirm Return",
+                                JOptionPane.YES_NO_OPTION);
+                        if (confirm == JOptionPane.YES_OPTION) {
+                            rentalService.returnRental(rental.getRentalId(), LocalDate.now());
+                            refreshData();
+                            
+                            // ★ 返却処理後、MainFrameの延滞状況を更新
+                            updateMainFrameOverdueStatus();
+                        }
+                    } else if ("Cancel".equals(label)) {
+                        // ★ キャンセル処理を実装
+                        int confirm = JOptionPane.showConfirmDialog(MyRentalsFrame.this,
+                                "Are you sure you want to cancel this reservation?", "Confirm Cancellation",
+                                JOptionPane.YES_NO_OPTION);
+                        if (confirm == JOptionPane.YES_OPTION) {
+                            rentalService.cancelRental(rental.getRentalId());
+                            refreshData();
+                        }
+                    }
+                }
+            }
+            isPushed = false;
+            return label;
+        }
+
+        @Override
+        public boolean stopCellEditing() {
+            isPushed = false;
+            return super.stopCellEditing();
+        }
     }
     
     /**
@@ -489,6 +614,18 @@ public class MyRentalsFrame extends JFrame {
             }
             
             return this;
+        }
+    }
+    
+    // ★ MainFrameの延滞状況を更新するメソッドを追加
+    private void updateMainFrameOverdueStatus() {
+        // アクティブなMainFrameを探して延滞状況を更新
+        for (Window window : Window.getWindows()) {
+            if (window instanceof MainFrame && window.isDisplayable()) {
+                MainFrame mainFrame = (MainFrame) window;
+                mainFrame.checkOverdueRentals();
+                break;
+            }
         }
     }
 }

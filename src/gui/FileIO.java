@@ -162,34 +162,55 @@ public class FileIO {
      */
     public Map<LocalDate, Integer> getReservationCounts(String costumeId, String size) {
         Map<LocalDate, Integer> counts = new HashMap<>();
+        
         try {
+            if (!Files.exists(rentalsPath)) {
+                return counts;
+            }
+
             List<String> lines = Files.readAllLines(rentalsPath, StandardCharsets.UTF_8);
+            
             for (String line : lines) {
                 if (line.startsWith("#") || line.trim().isEmpty()) continue;
 
                 String[] values = line.split(",");
-                if (values.length < 10) continue;
-
-                String recordCostumeId = values[2];
-                String recordSize = values[3];
-                String status = values[9];
-
-                if (recordCostumeId.equals(costumeId) && recordSize.equals(size) && status.equals("ACTIVE")) {
+                
+                // レンタルファイルの形式: rentalId,memberId,costumeId,size,rentalDate,returnDate,actualReturnDate,totalCost,dailyRate,lateFee,status
+                if (values.length >= 11) {
                     try {
-                        LocalDate startDate = LocalDate.parse(values[4]);
-                        LocalDate endDate = LocalDate.parse(values[5]);
+                        String recordCostumeId = values[2].trim();
+                        String recordSize = values[3].trim();
+                        String rentalDateStr = values[4].trim();
+                        String returnDateStr = values[5].trim();
+                        String status = values[10].trim();
 
-                        for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
-                            counts.put(date, counts.getOrDefault(date, 0) + 1);
+                        // 指定された衣装とサイズ、かつアクティブなレンタルのみ対象
+                        if (recordCostumeId.equals(costumeId) && recordSize.equals(size)) {
+                            // CANCELLEDは除外し、その他のステータスは予約として扱う
+                            if (!"CANCELLED".equals(status)) {
+                                try {
+                                    LocalDate rentalDate = LocalDate.parse(rentalDateStr);
+                                    LocalDate returnDate = LocalDate.parse(returnDateStr);
+                                    int quantity = 1; // 各レンタル記録は1つの衣装として扱う
+
+                                    // レンタル期間中の各日付で予約数をカウント
+                                    for (LocalDate date = rentalDate; !date.isAfter(returnDate); date = date.plusDays(1)) {
+                                        counts.put(date, counts.getOrDefault(date, 0) + quantity);
+                                    }
+                                } catch (java.time.format.DateTimeParseException e) {
+                                    System.err.println("Failed to parse date in line: " + line);
+                                }
+                            }
                         }
-                    } catch (java.time.format.DateTimeParseException e) {
-                        System.err.println("Failed to parse date format in rentals.csv: " + line);
+                    } catch (Exception e) {
+                        System.err.println("Error processing rental line: " + line);
                     }
                 }
             }
         } catch (IOException e) {
             System.err.println("Error reading rental data from " + rentalsPath + ": " + e.getMessage());
         }
+        
         return counts;
     }
 
@@ -295,6 +316,7 @@ public class FileIO {
         }
         return false;
     }
+
 
     /**
      * 会員IDで会員データを取得

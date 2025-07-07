@@ -9,6 +9,7 @@ public class AccountSettingsFrame extends JFrame {
     private String currentMemberId;
     private FileIO fileIO;
     private FileIO.MemberData currentMemberData;
+    private MainFrame parentMainFrame; // 親のMainFrameの参照を追加
     
     // 情報表示用フィールド
     private JTextField nameField;
@@ -31,8 +32,9 @@ public class AccountSettingsFrame extends JFrame {
     // タブパネル
     private JTabbedPane tabbedPane;
     
-    public AccountSettingsFrame(String memberId) {
+    public AccountSettingsFrame(String memberId, MainFrame parentFrame) {
         this.currentMemberId = memberId;
+        this.parentMainFrame = parentFrame; // 親フレームの参照を保存
         this.fileIO = new FileIO();
         loadMemberData();
         initializeComponents();
@@ -488,15 +490,13 @@ public class AccountSettingsFrame extends JFrame {
             JOptionPane.QUESTION_MESSAGE);
         
         if (choice == JOptionPane.YES_OPTION) {
-            // メイン画面に戻る
-            SwingUtilities.invokeLater(new Runnable() {
-                @Override
-                public void run() {
-                    MainFrame mainFrame = new MainFrame(currentMemberId);
-                    mainFrame.setVisible(true);
-                    AccountSettingsFrame.this.dispose();
-                }
-            });
+            // 既存のメインフレームを表示し、このフレームを閉じる
+            if (parentMainFrame != null) {
+                parentMainFrame.setVisible(true);
+                parentMainFrame.toFront(); // フレームを前面に表示
+                parentMainFrame.requestFocus(); // フォーカスを設定
+            }
+            this.dispose();
         }
     }
     

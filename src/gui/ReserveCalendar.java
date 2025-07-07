@@ -97,29 +97,25 @@ public class ReserveCalendar extends JDialog {
         this.costumeId = newCostumeId;
         this.selectedSize = newSelectedSize;
         
-        // データを再読み込み
+        // ★ データを再読み込み
         loadCostumeStock();
         loadReservations();
         
-        // カレンダー表示を更新
+        // ★ カレンダー表示を更新
         updateCalendar();
     }
 
-    // ↓↓↓ ここからが重要な変更点です ↓↓↓
-
     private void loadCostumeStock() {
-        // FileIOのメソッドを呼び出すだけに変更
+        // FileIOから最新の在庫数を取得
         this.maxStock = fileIO.getCostumeStock(this.costumeId, this.selectedSize);
     }
 
     private void loadReservations() {
-        // FileIOのメソッドを呼び出すだけに変更
+        // FileIOから最新の予約状況を取得
         this.reservationCounts.clear();
         Map<LocalDate, Integer> newCounts = fileIO.getReservationCounts(this.costumeId, this.selectedSize);
         this.reservationCounts.putAll(newCounts);
     }
-
-    // ↑↑↑ ここまでが重要な変更点です ↑↑↑
 
     private void updateCalendar() {
         // 月のラベルを更新 (英語表記に変更)

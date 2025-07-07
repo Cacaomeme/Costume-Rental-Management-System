@@ -1,8 +1,10 @@
 package gui;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.ArrayList;
 
 /**
  * Represents a single costume item in the rental system.

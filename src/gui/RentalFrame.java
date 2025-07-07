@@ -606,15 +606,23 @@ public class RentalFrame extends JFrame {
     
     private void setupSizeComboBox() {
         sizeComboBox.removeAllItems();
-        
-        // Add available sizes to combo box
-        for (String size : selectedCostume.getAvailableSizes()) {
-            if (selectedCostume.getStockForSize(size) > 0) {
+
+        // 共通の順序リスト
+        java.util.List<String> order = java.util.List.of("XS", "S", "M", "L", "XL", "XXL", "One Size");
+        java.util.List<String> available = new java.util.ArrayList<>(selectedCostume.getAvailableSizes());
+
+        // 指定順で追加
+        for (String size : order) {
+            if (available.contains(size)) {
                 sizeComboBox.addItem(size);
+                available.remove(size);
             }
         }
-        
-        // Select first size
+        // その他のサイズも追加
+        for (String size : available) {
+            sizeComboBox.addItem(size);
+        }
+
         if (sizeComboBox.getItemCount() > 0) {
             sizeComboBox.setSelectedIndex(0);
             updateSelectedSizeStock();

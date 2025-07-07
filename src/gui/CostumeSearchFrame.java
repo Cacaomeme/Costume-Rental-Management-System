@@ -13,6 +13,8 @@ import java.util.Map; // 追加
  * 衣装の検索・閲覧用フレーム
  */
 public class CostumeSearchFrame extends JFrame {
+    private static final List<String> STANDARD_SIZE_ORDER = List.of("XS", "S", "M", "L", "XL", "XXL", "One Size");
+    
     private String currentMemberId;
     private JTextField searchField;
     private JComboBox<CostumeEvent> eventComboBox;
@@ -77,7 +79,10 @@ public class CostumeSearchFrame extends JFrame {
         }
         
         // サイズフィルター
-        sizeComboBox = new JComboBox<>(new String[]{"All", "S", "M", "L"});
+        List<String> sizeOptions = new ArrayList<>();
+        sizeOptions.add("All");
+        sizeOptions.addAll(STANDARD_SIZE_ORDER);
+        sizeComboBox = new JComboBox<>(sizeOptions.toArray(new String[0]));
         
         // 価格範囲
         minPriceField = new JTextField(8);
@@ -427,10 +432,13 @@ public class CostumeSearchFrame extends JFrame {
         priceLabel.setForeground(new Color(0, 128, 0)); // 緑色で価格を強調
         
         // --- サイズと在庫表示の修正 ---
+        // サイズを標準順で表示
         StringBuilder sizeStockInfo = new StringBuilder();
-        for (String size : costume.getAvailableSizes()) {
-            int availableStock = getAvailableStock(costume.getCostumeId(), size);
-            sizeStockInfo.append(size).append("(").append(availableStock).append("), ");
+        for (String size : STANDARD_SIZE_ORDER) {
+            if (costume.getAvailableSizes().contains(size)) {
+                int availableStock = getAvailableStock(costume.getCostumeId(), size);
+                sizeStockInfo.append(size).append("(").append(availableStock).append("), ");
+            }
         }
         if (sizeStockInfo.length() > 0) {
             sizeStockInfo.setLength(sizeStockInfo.length() - 2); // 最後のカンマを削除

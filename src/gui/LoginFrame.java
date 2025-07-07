@@ -2,15 +2,14 @@ package gui;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import gui.FileIO;
 
 public class LoginFrame extends JFrame {
     private JTextField memberIdField;
     private JPasswordField passwordField;
+    private JCheckBox showPasswordCheckBox;
     private JButton loginButton;
     private JButton registerButton;
+    private JLabel statusLabel;
     
     public LoginFrame() {
         initializeComponents();
@@ -20,198 +19,232 @@ public class LoginFrame extends JFrame {
     }
     
     private void initializeComponents() {
-        // コンポーネント初期化
-        memberIdField = new JTextField(15);
-        passwordField = new JPasswordField(15);
-        loginButton = new JButton("Login");
-        registerButton = new JButton("New Registration");
+        // Input fields
+        memberIdField = new JTextField(20);
+        passwordField = new JPasswordField(20);
+        passwordField.setEchoChar('●');
         
-        // ボタンの色とフォント設定
+        // Password visibility checkbox
+        showPasswordCheckBox = new JCheckBox("Show password");
+        showPasswordCheckBox.setFont(new Font("Arial", Font.PLAIN, 12));
+        showPasswordCheckBox.setFocusable(false);
+        
+        // Buttons
+        loginButton = new JButton("Login");
+        registerButton = new JButton("Register New Member");
+        
+        // Status label
+        statusLabel = new JLabel(" ");
+        statusLabel.setFont(new Font("Arial", Font.PLAIN, 12));
+        statusLabel.setForeground(Color.RED);
+        statusLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        
+        // Button styling
         loginButton.setBackground(new Color(70, 130, 180));
         loginButton.setForeground(Color.BLACK);
         loginButton.setFont(new Font("Arial", Font.BOLD, 14));
+        loginButton.setPreferredSize(new Dimension(150, 40));
         
         registerButton.setBackground(new Color(60, 179, 113));
         registerButton.setForeground(Color.BLACK);
-        registerButton.setFont(new Font("Arial", Font.BOLD, 14));
+        registerButton.setFont(new Font("Arial", Font.BOLD, 12));
+        registerButton.setPreferredSize(new Dimension(180, 35));
+        
+        // Tooltips
+        memberIdField.setToolTipText("Enter your Member ID");
+        passwordField.setToolTipText("Enter your password");
     }
     
     private void setupLayout() {
         setLayout(new BorderLayout());
         
-        // タイトルパネル
+        // Title panel
         JPanel titlePanel = new JPanel();
         titlePanel.setBackground(new Color(245, 245, 245));
+        titlePanel.setBorder(BorderFactory.createEmptyBorder(25, 20, 20, 20));
+        
         JLabel titleLabel = new JLabel("Costume Rental Management System");
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 18));
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 20));
         titleLabel.setForeground(new Color(70, 130, 180));
+        titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
         titlePanel.add(titleLabel);
         
-        // ログインフォームパネル
-        JPanel formPanel = new JPanel(new GridBagLayout());
-        formPanel.setBackground(Color.WHITE);
-        formPanel.setBorder(BorderFactory.createEmptyBorder(30, 30, 30, 30));
+        // Login panel
+        JPanel loginPanel = new JPanel(new GridBagLayout());
+        loginPanel.setBackground(Color.WHITE);
+        loginPanel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createTitledBorder(
+                BorderFactory.createEtchedBorder(),
+                "Member Login",
+                0, 0,
+                new Font("Arial", Font.BOLD, 14),
+                new Color(70, 130, 180)
+            ),
+            BorderFactory.createEmptyBorder(25, 25, 25, 25)
+        ));
         
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.insets = new Insets(8, 10, 8, 10);
         gbc.anchor = GridBagConstraints.WEST;
         
-        // 会員IDラベルとフィールド
+        // Member ID field
         gbc.gridx = 0; gbc.gridy = 0;
         JLabel memberIdLabel = new JLabel("Member ID:");
-        memberIdLabel.setFont(new Font("Arial", Font.BOLD, 14));
-        formPanel.add(memberIdLabel, gbc);
-        gbc.gridx = 1;
-        formPanel.add(memberIdField, gbc);
+        memberIdLabel.setFont(new Font("Arial", Font.BOLD, 12));
+        loginPanel.add(memberIdLabel, gbc);
         
-        // パスワードラベルとフィールド
+        gbc.gridx = 1;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        loginPanel.add(memberIdField, gbc);
+        
+        // Password field
         gbc.gridx = 0; gbc.gridy = 1;
+        gbc.fill = GridBagConstraints.NONE;
         JLabel passwordLabel = new JLabel("Password:");
-        passwordLabel.setFont(new Font("Arial", Font.BOLD, 14));
-        formPanel.add(passwordLabel, gbc);
+        passwordLabel.setFont(new Font("Arial", Font.BOLD, 12));
+        loginPanel.add(passwordLabel, gbc);
+        
         gbc.gridx = 1;
-        formPanel.add(passwordField, gbc);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        loginPanel.add(passwordField, gbc);
         
-        // ボタンパネル - より良い配置のため
-        JPanel buttonPanel = new JPanel(new GridBagLayout());
-        buttonPanel.setBackground(Color.WHITE);
+        // Show password checkbox
+        gbc.gridx = 1; gbc.gridy = 2;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.insets = new Insets(5, 10, 15, 10);
+        loginPanel.add(showPasswordCheckBox, gbc);
         
-        GridBagConstraints buttonGbc = new GridBagConstraints();
-        buttonGbc.insets = new Insets(10, 10, 10, 10);
+        // Status label
+        gbc.gridx = 0; gbc.gridy = 3;
+        gbc.gridwidth = 2;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.anchor = GridBagConstraints.CENTER;
+        gbc.insets = new Insets(5, 10, 10, 10);
+        loginPanel.add(statusLabel, gbc);
         
-        // ログインボタン
-        buttonGbc.gridx = 0; buttonGbc.gridy = 0;
-        buttonPanel.add(loginButton, buttonGbc);
+        // Login button
+        gbc.gridx = 0; gbc.gridy = 4;
+        gbc.gridwidth = 2;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.anchor = GridBagConstraints.CENTER;
+        gbc.insets = new Insets(10, 10, 10, 10);
+        loginPanel.add(loginButton, gbc);
         
-        // 新規登録ボタン
-        buttonGbc.gridx = 1; buttonGbc.gridy = 0;
-        buttonPanel.add(registerButton, buttonGbc);
+        // Registration panel
+        JPanel registrationPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        registrationPanel.setBackground(Color.WHITE);
+        registrationPanel.setBorder(BorderFactory.createEmptyBorder(15, 20, 20, 20));
         
-        // フレームにパネル追加
+        JLabel registerLabel = new JLabel("Don't have an account?");
+        registerLabel.setFont(new Font("Arial", Font.PLAIN, 12));
+        registrationPanel.add(registerLabel);
+        registrationPanel.add(Box.createHorizontalStrut(10));
+        registrationPanel.add(registerButton);
+        
+        // Add panels to frame
         add(titlePanel, BorderLayout.NORTH);
-        add(formPanel, BorderLayout.CENTER);
-        add(buttonPanel, BorderLayout.SOUTH);
+        add(loginPanel, BorderLayout.CENTER);
+        add(registrationPanel, BorderLayout.SOUTH);
     }
     
     private void setupEventListeners() {
-        loginButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                handleLogin();
-            }
-        });
+        // Password visibility toggle
+        showPasswordCheckBox.addActionListener(e -> togglePasswordVisibility());
         
-        registerButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                handleRegister();
-            }
-        });
+        // Login button
+        loginButton.addActionListener(e -> handleLogin());
         
-        // Enterキーでログイン実行
-        passwordField.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                handleLogin();
-            }
-        });
+        // Register button
+        registerButton.addActionListener(e -> openRegistrationFrame());
+        
+        // Enter key support
+        passwordField.addActionListener(e -> handleLogin());
+        memberIdField.addActionListener(e -> passwordField.requestFocus());
+    }
+    
+    private void togglePasswordVisibility() {
+        if (showPasswordCheckBox.isSelected()) {
+            passwordField.setEchoChar((char) 0); // Show password
+        } else {
+            passwordField.setEchoChar('●'); // Hide password
+        }
     }
     
     private void setupFrame() {
         setTitle("Costume Rental System - Login");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(450, 300);
-        setLocationRelativeTo(null); // 画面中央に配置
+        setSize(450, 420);
+        setLocationRelativeTo(null);
         setResizable(false);
+        
+        SwingUtilities.invokeLater(() -> memberIdField.requestFocus());
     }
     
     private void handleLogin() {
         String memberId = memberIdField.getText().trim();
         String password = new String(passwordField.getPassword());
         
-        // 入力チェック
+        statusLabel.setText(" ");
+        
+        // Validation
         if (memberId.isEmpty()) {
-            showErrorMessage("Please enter Member ID.");
+            showStatus("Please enter your Member ID.", Color.RED);
             memberIdField.requestFocus();
             return;
         }
         
         if (password.isEmpty()) {
-            showErrorMessage("Please enter Password.");
+            showStatus("Please enter your password.", Color.RED);
             passwordField.requestFocus();
             return;
         }
         
-        //MemberServiceによる実際のログイン処理を実装
-        if (authenticateUser(memberId, password)) {
-            JOptionPane.showMessageDialog(this, 
-                "Login successful! Welcome, " + memberId, 
-                "Success", 
-                JOptionPane.INFORMATION_MESSAGE);
-            
-            //メイン画面を開く
-            MainFrame mainFrame = new MainFrame(memberId);
-            mainFrame.setVisible(true);
-            this.dispose();
-            
-        } else {
-            showErrorMessage("Invalid Member ID or Password.");
-            clearPasswordField();
-        }
-    }
-    
-    private void handleRegister() {
-        // 新規登録画面を開く
+        // Authentication using FileIO
         try {
-            RegistrationFrame registerFrame = new RegistrationFrame(this);
-            registerFrame.setVisible(true);
-            this.setVisible(false); // ログイン画面を隠す
-        } catch (Exception e) {
-            showErrorMessage("Failed to open registration window: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
-
-    // 新規登録画面から戻ってきた時に呼ばれるメソッド
-    public void returnFromRegistration() {
-        this.setVisible(true);
-        this.toFront();
-        // フィールドをクリアして新しい状態にする
-        memberIdField.setText("");
-        clearPasswordField();
-    }
-    
-    //ログイン認証
-    private boolean authenticateUser(String memberId, String password) {
-        FileIO checkData = new FileIO();
-        if (checkData.isValidLogin(memberId, password)) {
-            return true; // 認証成功
-        }
-        return false; // 認証失敗
-    }
-    
-    private void showErrorMessage(String message) {
-        JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE);
-    }
-    
-    private void clearPasswordField() {
-        passwordField.setText("");
-        passwordField.requestFocus();
-    }
-    
-    public static void main(String[] args) {
-        // Look and Feel設定
-        try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                new LoginFrame().setVisible(true);
+            FileIO fileIO = FileIO.getInstance();
+            if (fileIO.isValidLogin(memberId, password)) {
+                showStatus("Login successful!", Color.GREEN);
+                
+                SwingUtilities.invokeLater(() -> {
+                    MainFrame mainFrame = new MainFrame(memberId);
+                    mainFrame.setVisible(true);
+                    this.dispose();
+                });
+            } else {
+                showStatus("Invalid Member ID or password.", Color.RED);
+                passwordField.setText("");
+                passwordField.requestFocus();
             }
-        });
+        } catch (Exception e) {
+            showStatus("Authentication system error. Please try again.", Color.RED);
+            System.err.println("Login error: " + e.getMessage());
+        }
+    }
+    
+    private void openRegistrationFrame() {
+        RegistrationFrame registrationFrame = new RegistrationFrame(this);
+        registrationFrame.setVisible(true);
+        this.setVisible(false);
+    }
+    
+    private void showStatus(String message, Color color) {
+        statusLabel.setText(message);
+        statusLabel.setForeground(color);
+        
+        if (color == Color.GREEN) {
+            Timer timer = new Timer(3000, e -> statusLabel.setText(" "));
+            timer.setRepeats(false);
+            timer.start();
+        }
+    }
+    
+    public void clearFields() {
+        memberIdField.setText("");
+        passwordField.setText("");
+        showPasswordCheckBox.setSelected(false);
+        togglePasswordVisibility();
+        statusLabel.setText(" ");
+        memberIdField.requestFocus();
     }
 }

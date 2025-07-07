@@ -69,7 +69,7 @@ public class RentalService {
             try (PrintWriter writer = new PrintWriter(
                     new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8))) {
                 writer.println("# Rental Management System - Rental Records");
-                writer.println("# Format: rentalId,memberId,costumeId,size,rentalDate,returnDate,actualReturnDate,totalCost,lateFee,status");
+                writer.println("# Format: rentalId,memberId,costumeId,size,rentalDate,returnDate,actualReturnDate,totalCost,dailyRate,lateFee,status");
             }
             
         } catch (IOException e) {
@@ -85,7 +85,7 @@ public class RentalService {
                 new OutputStreamWriter(new FileOutputStream(RENTAL_FILE_PATH), StandardCharsets.UTF_8))) {
             
             writer.println("# Rental Management System - Rental Records");
-            writer.println("# Format: rentalId,memberId,costumeId,size,rentalDate,returnDate,actualReturnDate,totalCost,lateFee,status");
+            writer.println("# Format: rentalId,memberId,costumeId,size,rentalDate,returnDate,actualReturnDate,totalCost,dailyRate,lateFee,status");
             
             for (Rental rental : allRentals) {
                 writer.println(rental.toCsvString());
@@ -124,21 +124,19 @@ public class RentalService {
     public boolean createRental(String memberId, String costumeId, String size, LocalDate rentalDate, 
                                LocalDate returnDate, double totalCost) {
         try {
-            // 衣装の在庫確認
             if (!isCostumeAvailable(costumeId, size)) {
                 System.err.println("Costume " + costumeId + " size " + size + " is not available for rental");
                 return false;
             }
             
             String rentalId = generateNewRentalId();
-            Rental newRental = new Rental(rentalId, memberId, costumeId, size, rentalDate, returnDate, totalCost);
+            long rentalDays = calculateRentalDays(rentalDate, returnDate);
+            double dailyRate = (rentalDays > 0) ? totalCost / rentalDays : totalCost;
             
+            Rental newRental = new Rental(rentalId, memberId, costumeId, size, rentalDate, returnDate, totalCost, dailyRate);
             allRentals.add(newRental);
             
-            // 衣装の在庫を減らす
             updateCostumeStock(costumeId, size, -1);
-            
-            // ファイルに保存
             saveRentals();
             
             System.out.println("Created new rental: " + newRental);
@@ -180,18 +178,14 @@ public class RentalService {
      * 衣装の在庫を更新（レンタル時-1、返却時+1）
      */
     private void updateCostumeStock(String costumeId, int change) {
-        // TODO: CostumeDataManagerに在庫更新機能を追加する必要がある
         System.out.println("Stock update for costume " + costumeId + ": " + change);
-        // 現在はログ出力のみ。実際の実装では衣装データファイルを更新する
     }
     
     /**
      * 特定サイズの衣装の在庫を更新（レンタル時-1、返却時+1）
      */
     private void updateCostumeStock(String costumeId, String size, int change) {
-        // TODO: CostumeDataManagerに在庫更新機能を追加する必要がある
         System.out.println("Stock update for costume " + costumeId + " size " + size + ": " + change);
-        // 現在はログ出力のみ。実際の実装では衣装データファイルを更新する
     }
     
     /**
@@ -209,7 +203,8 @@ public class RentalService {
     public List<Rental> getActiveRentalsByMemberId(String memberId) {
         return allRentals.stream()
                 .filter(rental -> rental.getMemberId().equals(memberId))
-                .filter(rental -> rental.getStatus() == Rental.RentalStatus.ACTIVE || 
+                .filter(rental -> rental.getStatus() == Rental.RentalStatus.RESERVED ||
+                                rental.getStatus() == Rental.RentalStatus.ACTIVE || 
                                 rental.getStatus() == Rental.RentalStatus.OVERDUE)
                 .collect(Collectors.toList());
     }
@@ -248,26 +243,43 @@ public class RentalService {
                 rental.setActualReturnDate(actualReturnDate);
                 rental.setStatus(Rental.RentalStatus.RETURNED);
                 
-                // 延滞金計算
                 if (rental.getOverdueDays() > 0) {
-                    // TODO: 衣装の日額料金を取得して延滞金を計算
-                    double dailyRate = rental.getTotalCost() / rental.getRentalDays();
-                    double lateFee = rental.calculateLateFee(dailyRate);
+                    double lateFee = rental.calculateLateFee();
                     rental.setLateFee(lateFee);
                 }
                 
-                // 衣装の在庫を戻す
                 updateCostumeStock(rental.getCostumeId(), rental.getSize(), 1);
-                
-                // ファイルに保存
                 saveRentals();
                 
                 System.out.println("Returned rental: " + rental);
                 return true;
             }
         }
-        
-        System.err.println("Rental " + rentalId + " not found");
+        System.err.println("Rental not found: " + rentalId);
+        return false;
+    }
+    
+    /**
+     * レンタルをキャンセルする
+     */
+    public boolean cancelRental(String rentalId) {
+        for (Rental rental : allRentals) {
+            if (rental.getRentalId().equals(rentalId)) {
+                if (rental.getStatus() != Rental.RentalStatus.RESERVED) {
+                    System.err.println("Cannot cancel rental " + rentalId + " with status: " + rental.getStatus());
+                    return false;
+                }
+                
+                rental.setStatus(Rental.RentalStatus.CANCELLED);
+                
+                updateCostumeStock(rental.getCostumeId(), rental.getSize(), 1);
+                saveRentals();
+                
+                System.out.println("Cancelled rental: " + rental);
+                return true;
+            }
+        }
+        System.err.println("Rental not found for cancellation: " + rentalId);
         return false;
     }
     

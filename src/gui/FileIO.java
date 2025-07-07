@@ -186,8 +186,8 @@ public class FileIO {
 
                         // 指定された衣装とサイズ、かつアクティブなレンタルのみ対象
                         if (recordCostumeId.equals(costumeId) && recordSize.equals(size)) {
-                            // CANCELLEDは除外し、その他のステータスは予約として扱う
-                            if (!"CANCELLED".equals(status)) {
+                            // CANCELLED と RETURNED は除外し、アクティブなレンタルのみ在庫から差し引く
+                            if (!"CANCELLED".equals(status) && !"RETURNED".equals(status)) {
                                 try {
                                     LocalDate rentalDate = LocalDate.parse(rentalDateStr);
                                     LocalDate returnDate = LocalDate.parse(returnDateStr);

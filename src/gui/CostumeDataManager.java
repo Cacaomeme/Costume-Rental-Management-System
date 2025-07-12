@@ -1,80 +1,116 @@
+// src/gui/CostumeDataManager.java
 package gui;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class CostumeDataManager {
 
-    
-    private static final String RESOURCE_PATH = "/gui/costumes.csv";
+    private static final String RESOURCE_PATH_STR = "gui/costumes.csv";
+    private FileIO fileIO = FileIO.getInstance();
 
     public List<Costume> loadCostumes() {
         List<Costume> costumeList = new ArrayList<>();
+        List<String> lines = fileIO.readAllLines(RESOURCE_PATH_STR);
 
-    
-        InputStream is = this.getClass().getResourceAsStream(RESOURCE_PATH);
+        for (String line : lines) {
+            if (line.trim().isEmpty() || line.startsWith("#")) {
+                continue;
+            }
 
-     
-        if (is == null) {
-            System.err.println("Costume data file not found in classpath: " + RESOURCE_PATH);
-            return costumeList;
-        }
+            String[] data = line.split(",");
+            if (data.length >= 5) {
+                try {
+                    String costumeId = data[0].trim();
+                    String costumeName = data[1].trim();
+                    CostumeEvent event = CostumeEvent.valueOf(data[2].trim());
+                    double price = Double.parseDouble(data[3].trim());
+                    String imagePath = data[data.length - 1].trim();
 
-       
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                // Ignore empty or commented lines
-                if (line.trim().isEmpty() || line.startsWith("#")) {
-                    continue;
-                }
+                    Costume costume = new Costume(costumeId, costumeName, event, price, imagePath);
 
-                String[] data = line.split(",");
-                if (data.length >= 5) {
-                    try {
-                        // Parse basic data
-                        String costumeId = data[0].trim();
-                        String costumeName = data[1].trim();
-                        CostumeEvent event = CostumeEvent.valueOf(data[2].trim());
-                        double price = Double.parseDouble(data[3].trim());
-                        
-                        // Find the image path (last element)
-                        String imagePath = data[data.length - 1].trim();
-                        
-                        // Create costume object
-                        Costume costume = new Costume(costumeId, costumeName, event, price, imagePath);
-                        
-                        // Parse size:stock pairs (elements 4 to second-to-last)
-                        for (int i = 4; i < data.length - 1; i++) {
-                            String sizeStockPair = data[i].trim();
-                            if (sizeStockPair.contains(":")) {
-                                String[] pair = sizeStockPair.split(":");
-                                if (pair.length == 2) {
-                                    String size = pair[0].trim();
-                                    int stock = Integer.parseInt(pair[1].trim());
-                                    costume.addSizeStock(size, stock);
-                                }
+                    // Parse size:stock pairs (from 4th element to second to last)
+                    for (int i = 4; i < data.length - 1; i++) {
+                        String sizeStockPair = data[i].trim();
+                        if (sizeStockPair.contains(":")) {
+                            String[] pair = sizeStockPair.split(":");
+                            if (pair.length == 2) {
+                                String size = pair[0].trim();
+                                int stock = Integer.parseInt(pair[1].trim());
+                                costume.addSizeStock(size, stock);
                             }
                         }
-                        
-                        costumeList.add(costume);
-
-                    } catch (IllegalArgumentException e) {
-                        System.err.println("Error parsing line: " + line + ". Invalid data format. " + e.getMessage());
                     }
-                } else {
-                    System.err.println("Skipping malformed line: " + line);
+                    costumeList.add(costume);
+                } catch (IllegalArgumentException e) {
+                    System.err.println("Error parsing line: " + line + ". Invalid data format. " + e.getMessage());
                 }
+            } else {
+                System.err.println("Skipping malformed line: " + line);
             }
-        } catch (Exception e) {
-            System.err.println("Error reading costume data resource: " + e.getMessage());
-            e.printStackTrace();
         }
-
         return costumeList;
+    }
+
+    private String costumeToCsvString(Costume costume) {
+        String sizeStockStr = costume.getSizeStock().entrySet().stream()
+            .map(entry -> entry.getKey() + ":" + entry.getValue())
+            .collect(Collectors.joining(","));
+        
+        return String.join(",",
+            costume.getCostumeId(),
+            costume.getCostumeName(),
+            costume.getEvent().name(),
+            String.valueOf(costume.getPrice()),
+            sizeStockStr,
+            costume.getImagePath()
+        );
+    }
+    
+    // ADDED: Method to save all costumes back to the CSV file
+    private boolean saveAllCostumes(List<Costume> costumes) {
+        List<String> lines = new ArrayList<>();
+        lines.add("# Costume ID, Costume Name, Event, Price, Size:Stock pairs (comma-separated), Image Path");
+        for (Costume costume : costumes) {
+            lines.add(costumeToCsvString(costume));
+        }
+        return fileIO.writeAllLines(RESOURCE_PATH_STR, lines);
+    }
+
+    // ADDED: Method to add a new costume
+    public boolean addCostume(Costume newCostume) {
+        List<Costume> costumes = loadCostumes();
+        // Check for duplicate ID
+        if (costumes.stream().anyMatch(c -> c.getCostumeId().equals(newCostume.getCostumeId()))) {
+            return false;
+        }
+        costumes.add(newCostume);
+        return saveAllCostumes(costumes);
+    }
+
+    // ADDED: Method to update an existing costume
+    public boolean updateCostume(Costume updatedCostume) {
+        List<Costume> costumes = loadCostumes();
+        for (int i = 0; i < costumes.size(); i++) {
+            if (costumes.get(i).getCostumeId().equals(updatedCostume.getCostumeId())) {
+                costumes.set(i, updatedCostume);
+                return saveAllCostumes(costumes);
+            }
+        }
+        return false; // Costume not found
+    }
+
+    // ADDED: Method to delete a costume by ID
+    public boolean deleteCostume(String costumeId) {
+        List<Costume> costumes = loadCostumes();
+        boolean removed = costumes.removeIf(c -> c.getCostumeId().equals(costumeId));
+        if (removed) {
+            return saveAllCostumes(costumes);
+        }
+        return false;
     }
 }

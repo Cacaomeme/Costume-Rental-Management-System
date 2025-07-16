@@ -1,11 +1,7 @@
-// src/gui/CostumeDataManager.java
 package gui;
 
-import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 public class CostumeDataManager {
@@ -71,7 +67,6 @@ public class CostumeDataManager {
         );
     }
     
-    // ADDED: Method to save all costumes back to the CSV file
     private boolean saveAllCostumes(List<Costume> costumes) {
         List<String> lines = new ArrayList<>();
         lines.add("# Costume ID, Costume Name, Event, Price, Size:Stock pairs (comma-separated), Image Path");
@@ -81,7 +76,6 @@ public class CostumeDataManager {
         return fileIO.writeAllLines(RESOURCE_PATH_STR, lines);
     }
 
-    // ADDED: Method to add a new costume
     public boolean addCostume(Costume newCostume) {
         List<Costume> costumes = loadCostumes();
         // Check for duplicate ID
@@ -92,7 +86,6 @@ public class CostumeDataManager {
         return saveAllCostumes(costumes);
     }
 
-    // ADDED: Method to update an existing costume
     public boolean updateCostume(Costume updatedCostume) {
         List<Costume> costumes = loadCostumes();
         for (int i = 0; i < costumes.size(); i++) {
@@ -104,7 +97,6 @@ public class CostumeDataManager {
         return false; // Costume not found
     }
 
-    // ADDED: Method to delete a costume by ID
     public boolean deleteCostume(String costumeId) {
         List<Costume> costumes = loadCostumes();
         boolean removed = costumes.removeIf(c -> c.getCostumeId().equals(costumeId));

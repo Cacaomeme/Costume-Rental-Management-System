@@ -1,17 +1,12 @@
 package gui;
 
+import java.awt.*;
+import java.util.ArrayList;
+import java.util.List; 
+import java.util.Map;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Map; // 追加
 
-/**
- * 衣装の検索・閲覧用フレーム
- */
 public class CostumeSearchFrame extends JFrame {
     private static final List<String> STANDARD_SIZE_ORDER = List.of("XS", "S", "M", "L", "XL", "XXL", "One Size");
     
@@ -25,13 +20,13 @@ public class CostumeSearchFrame extends JFrame {
     private JScrollPane scrollPane;
     
     private CostumeDataManager dataManager;
-    private FileIO fileIO; // 追加
+    private FileIO fileIO; 
     private List<Costume> allCostumes;
     private List<Costume> filteredCostumes;
 
     public CostumeSearchFrame(String memberId) {
         this.currentMemberId = memberId;
-        this.fileIO = FileIO.getInstance(); // 追加
+        this.fileIO = FileIO.getInstance(); 
         initializeComponents();
         loadCostumeData();
         setupLayout();
@@ -39,23 +34,17 @@ public class CostumeSearchFrame extends JFrame {
         displayAllCostumes();
     }
     
-    /**
-     * 高画質な画像リサイズメソッド
-     */
     private Image getHighQualityScaledImage(Image originalImage, int targetWidth, int targetHeight) {
-        // BufferedImageを使用して高画質リサイズ
         java.awt.image.BufferedImage bufferedImage = new java.awt.image.BufferedImage(
             targetWidth, targetHeight, java.awt.image.BufferedImage.TYPE_INT_RGB);
         
         Graphics2D g2d = bufferedImage.createGraphics();
         
-        // 高画質レンダリングヒントを設定
         g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
         g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g2d.setRenderingHint(RenderingHints.KEY_COLOR_RENDERING, RenderingHints.VALUE_COLOR_RENDER_QUALITY);
         
-        // 画像を描画
         g2d.drawImage(originalImage, 0, 0, targetWidth, targetHeight, null);
         g2d.dispose();
         
@@ -68,27 +57,24 @@ public class CostumeSearchFrame extends JFrame {
         setSize(1000, 700);
         setLocationRelativeTo(null);
 
-        // 検索コンポーネント
         searchField = new JTextField(20);
         
-        // イベントフィルター
         eventComboBox = new JComboBox<>();
-        eventComboBox.addItem(null); // "全てのイベント"オプション
+        eventComboBox.addItem(null); 
         for (CostumeEvent event : CostumeEvent.values()) {
             eventComboBox.addItem(event);
         }
         
-        // サイズフィルター
         List<String> sizeOptions = new ArrayList<>();
         sizeOptions.add("All");
         sizeOptions.addAll(STANDARD_SIZE_ORDER);
         sizeComboBox = new JComboBox<>(sizeOptions.toArray(new String[0]));
         
-        // 価格範囲
+
         minPriceField = new JTextField(8);
         maxPriceField = new JTextField(8);
         
-        // 衣装表示エリア
+
         costumeDisplayPanel = new JPanel();
         costumeDisplayPanel.setLayout(new GridLayout(0, 3, 10, 10)); // 3列
         costumeDisplayPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
@@ -96,15 +82,12 @@ public class CostumeSearchFrame extends JFrame {
         scrollPane = new JScrollPane(costumeDisplayPanel);
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-        
-        // スクロールパフォーマンスの最適化
-        scrollPane.getVerticalScrollBar().setUnitIncrement(16); // スクロール速度を調整
+           
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16); 
         scrollPane.getVerticalScrollBar().setBlockIncrement(64);
         
-        // ダブルバッファリングを有効化
         costumeDisplayPanel.setDoubleBuffered(true);
         
-        // データマネージャーの初期化
         dataManager = new CostumeDataManager();
         allCostumes = new ArrayList<>();
         filteredCostumes = new ArrayList<>();
@@ -127,14 +110,14 @@ public class CostumeSearchFrame extends JFrame {
     private void setupLayout() {
         setLayout(new BorderLayout());
         
-        // 検索パネル（上部）
+   
         JPanel searchPanel = createSearchPanel();
         add(searchPanel, BorderLayout.NORTH);
         
-        // メインコンテンツ（中央）
+   
         add(scrollPane, BorderLayout.CENTER);
         
-        // ボタンパネル（下部）
+ 
         JPanel buttonPanel = createButtonPanel();
         add(buttonPanel, BorderLayout.SOUTH);
     }
@@ -149,10 +132,10 @@ public class CostumeSearchFrame extends JFrame {
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
 
-        // ラベルのフォント設定
+        
         Font labelFont = new Font(Font.SANS_SERIF, Font.BOLD, 12);
         
-        // 名前で検索
+        
         gbc.gridx = 0; gbc.gridy = 0;
         JLabel nameLabel = new JLabel("Costume Name:");
         nameLabel.setFont(labelFont);
@@ -160,7 +143,7 @@ public class CostumeSearchFrame extends JFrame {
         gbc.gridx = 1;
         panel.add(searchField, gbc);
 
-        // イベントフィルター
+        
         gbc.gridx = 2; gbc.gridy = 0;
         JLabel eventLabel = new JLabel("Event:");
         eventLabel.setFont(labelFont);
@@ -168,7 +151,7 @@ public class CostumeSearchFrame extends JFrame {
         gbc.gridx = 3;
         panel.add(eventComboBox, gbc);
 
-        // サイズフィルター
+  
         gbc.gridx = 0; gbc.gridy = 1;
         JLabel sizeLabel = new JLabel("Size:");
         sizeLabel.setFont(labelFont);
@@ -176,7 +159,7 @@ public class CostumeSearchFrame extends JFrame {
         gbc.gridx = 1;
         panel.add(sizeComboBox, gbc);
 
-        // 価格範囲
+  
         gbc.gridx = 2; gbc.gridy = 1;
         JLabel priceLabel = new JLabel("Price Range:");
         priceLabel.setFont(labelFont);
@@ -195,24 +178,24 @@ public class CostumeSearchFrame extends JFrame {
         gbc.gridx = 3;
         panel.add(pricePanel, gbc);
 
-        // 検索ボタン
+  
         JButton searchButton = new JButton("Search");
         searchButton.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 12));
         searchButton.setBackground(new Color(70, 130, 180));
         searchButton.setForeground(Color.BLACK);
         searchButton.setFocusPainted(false);
-        searchButton.setPreferredSize(new Dimension(90, 40)); // 検索ボタンサイズを大きく
+        searchButton.setPreferredSize(new Dimension(90, 40)); 
         searchButton.addActionListener(e -> performSearch());
         gbc.gridx = 4; gbc.gridy = 0; gbc.gridheight = 2;
         panel.add(searchButton, gbc);
 
-        // リセットボタン
+  
         JButton resetButton = new JButton("Reset");
         resetButton.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 12));
         resetButton.setBackground(new Color(220, 20, 60));
         resetButton.setForeground(Color.BLACK);
         resetButton.setFocusPainted(false);
-        resetButton.setPreferredSize(new Dimension(90, 40)); // リセットボタンサイズを大きく
+        resetButton.setPreferredSize(new Dimension(90, 40));
         resetButton.addActionListener(e -> resetFilters());
         gbc.gridx = 5;
         panel.add(resetButton, gbc);
@@ -229,10 +212,10 @@ public class CostumeSearchFrame extends JFrame {
         backButton.setForeground(Color.BLACK);
         backButton.setFocusPainted(false);
         backButton.setBorder(BorderFactory.createRaisedBevelBorder());
-        backButton.setPreferredSize(new Dimension(140, 40)); // Back to Mainボタンサイズを大きく
+        backButton.setPreferredSize(new Dimension(140, 40)); // Back to Main
         backButton.addActionListener(e -> {
-            dispose(); // このウィンドウを閉じる
-            // MainFrameは開いたままにする
+            dispose(); 
+           
         });
         
         panel.add(backButton);
@@ -240,29 +223,26 @@ public class CostumeSearchFrame extends JFrame {
     }
 
     private void setupEventListeners() {
-        // 入力に応じたリアルタイム検索
+       
         searchField.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
             public void changedUpdate(javax.swing.event.DocumentEvent e) { performSearch(); }
             public void removeUpdate(javax.swing.event.DocumentEvent e) { performSearch(); }
             public void insertUpdate(javax.swing.event.DocumentEvent e) { performSearch(); }
         });
         
-        // フィルター変更リスナー
+    
         eventComboBox.addActionListener(e -> performSearch());
         sizeComboBox.addActionListener(e -> performSearch());
     }
 
-    // --- ここから追加 ---
-    /**
-     * 指定した衣装とサイズの今日の利用可能在庫数を取得
-     */
+
     private int getAvailableStock(String costumeId, String size) {
         int maxStock = fileIO.getCostumeStock(costumeId, size);
         if (maxStock <= 0) {
             return 0;
         }
         
-        // 今日の日付でレンタル中の数を取得
+        
         java.time.LocalDate today = java.time.LocalDate.now();
         Map<java.time.LocalDate, Integer> reservationCounts = fileIO.getReservationCounts(costumeId, size);
         int reservedToday = reservationCounts.getOrDefault(today, 0);
@@ -270,9 +250,7 @@ public class CostumeSearchFrame extends JFrame {
         return Math.max(0, maxStock - reservedToday);
     }
     
-    /**
-     * 衣装が利用可能な在庫を持っているかチェック
-     */
+
     private boolean hasAvailableStock(Costume costume) {
         for (String size : costume.getAvailableSizes()) {
             int availableStock = getAvailableStock(costume.getCostumeId(), size);
@@ -283,22 +261,18 @@ public class CostumeSearchFrame extends JFrame {
         return false;
     }
     
-    /**
-     * 在庫情報を更新
-     */
+
     public void refreshStock() {
         SwingUtilities.invokeLater(() -> {
-            performSearch(); // 現在の検索条件で再表示
+            performSearch(); 
         });
     }
-    // --- ここまで追加 ---
 
     private void performSearch() {
         String searchText = searchField.getText().toLowerCase().trim();
         CostumeEvent selectedEvent = (CostumeEvent) eventComboBox.getSelectedItem();
         String selectedSize = (String) sizeComboBox.getSelectedItem();
-        
-        // 価格範囲の解析
+      
         double minPrice = 0;
         double maxPrice = Double.MAX_VALUE;
         
@@ -310,36 +284,34 @@ public class CostumeSearchFrame extends JFrame {
                 maxPrice = Double.parseDouble(maxPriceField.getText().trim());
             }
         } catch (NumberFormatException e) {
-            // 価格形式が無効な場合 - 価格フィルターを無視
+            
         }
 
-        // 衣装をフィルタリング
+      
         filteredCostumes.clear();
         for (Costume costume : allCostumes) {
             boolean matches = true;
             
-            // 名前検索
+     
             if (!searchText.isEmpty()) {
                 matches &= costume.getCostumeName().toLowerCase().contains(searchText);
             }
             
-            // イベントフィルター
+
             if (selectedEvent != null) {
                 matches &= costume.getEvent() == selectedEvent;
             }
-            
-            // サイズフィルター
+  
             if (!"All".equals(selectedSize)) {
                 matches &= costume.getSize().equals(selectedSize);
             }
             
-            // 価格範囲フィルター
+           
             matches &= costume.getPrice() >= minPrice && costume.getPrice() <= maxPrice;
             
-            // --- 在庫確認の修正 ---
-            // 実際の利用可能在庫をチェック
+           
             matches &= hasAvailableStock(costume);
-            // --- 修正ここまで ---
+       
             
             if (matches) {
                 filteredCostumes.add(costume);
@@ -381,7 +353,7 @@ public class CostumeSearchFrame extends JFrame {
         costumeDisplayPanel.revalidate();
         costumeDisplayPanel.repaint();
         
-        // 結果数でタイトルを更新
+       
         setTitle("Costume Search - " + costumes.size() + " results");
     }
 
@@ -390,17 +362,17 @@ public class CostumeSearchFrame extends JFrame {
         card.setBorder(BorderFactory.createRaisedBevelBorder());
         card.setPreferredSize(new Dimension(250, 300));
 
-        // 画像パネル（プレースホルダー）
+    
         JPanel imagePanel = new JPanel();
         imagePanel.setPreferredSize(new Dimension(200, 150));
         imagePanel.setBackground(Color.LIGHT_GRAY);
         imagePanel.setBorder(BorderFactory.createLoweredBevelBorder());
         
-        // 実際の画像を読み込む試行（高画質）
+    
         try {
             ImageIcon icon = new ImageIcon(getClass().getResource("/" + costume.getImagePath()));
             if (icon.getIconWidth() > 0) {
-                // 高画質な画像リサイズのためのメソッドを使用
+               
                 Image img = getHighQualityScaledImage(icon.getImage(), 200, 150);
                 JLabel imageLabel = new JLabel(new ImageIcon(img));
                 imageLabel.setHorizontalAlignment(JLabel.CENTER);
@@ -417,7 +389,7 @@ public class CostumeSearchFrame extends JFrame {
             imagePanel.add(placeholderLabel);
         }
 
-        // 情報パネル
+        
         JPanel infoPanel = new JPanel(new GridLayout(0, 1));
         infoPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
         
@@ -429,10 +401,9 @@ public class CostumeSearchFrame extends JFrame {
         
         JLabel priceLabel = new JLabel("Price: $" + String.format("%.1f", costume.getPrice()));
         priceLabel.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 12));
-        priceLabel.setForeground(new Color(0, 128, 0)); // 緑色で価格を強調
+        priceLabel.setForeground(new Color(0, 128, 0)); 
         
-        // --- サイズと在庫表示の修正 ---
-        // サイズを標準順で表示
+     
         StringBuilder sizeStockInfo = new StringBuilder();
         for (String size : STANDARD_SIZE_ORDER) {
             if (costume.getAvailableSizes().contains(size)) {
@@ -441,43 +412,43 @@ public class CostumeSearchFrame extends JFrame {
             }
         }
         if (sizeStockInfo.length() > 0) {
-            sizeStockInfo.setLength(sizeStockInfo.length() - 2); // 最後のカンマを削除
+            sizeStockInfo.setLength(sizeStockInfo.length() - 2); 
         }
         JLabel sizeLabel = new JLabel("Available: " + sizeStockInfo.toString());
         sizeLabel.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 12));
-        // --- 修正ここまで ---
+ 
         
         infoPanel.add(nameLabel);
         infoPanel.add(eventLabel);
         infoPanel.add(priceLabel);
         infoPanel.add(sizeLabel);
 
-        // ボタンパネル
+
         JPanel buttonPanel = new JPanel(new FlowLayout());
         JButton rentButton = new JButton("Rent");
         
-        // ボタンのスタイル改善
+       
         rentButton.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 12));
         rentButton.setBackground(new Color(70, 130, 180));
         rentButton.setForeground(Color.BLACK);
         rentButton.setFocusPainted(false);
         rentButton.setBorder(BorderFactory.createRaisedBevelBorder());
-        rentButton.setPreferredSize(new Dimension(100, 35)); // Rentボタンを少し大きく
+        rentButton.setPreferredSize(new Dimension(100, 35)); 
         
         rentButton.addActionListener(e -> {
             try {
-                // レンタル画面を開く
+               
                 RentalFrame rentalFrame = new RentalFrame(currentMemberId, costume);
                 
-                // --- ここから追加: RentalFrameのウィンドウクローズを監視 ---
+              
                 rentalFrame.addWindowListener(new java.awt.event.WindowAdapter() {
                     @Override
                     public void windowClosed(java.awt.event.WindowEvent e) {
-                        // RentalFrameが閉じられた時に在庫を更新
+                       
                         refreshStock();
                     }
                 });
-                // --- ここまで追加 ---
+            
                 
                 rentalFrame.setVisible(true);
             } catch (Exception ex) {

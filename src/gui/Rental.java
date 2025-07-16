@@ -4,17 +4,14 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 
-/**
- * レンタル情報を管理するクラス
- */
+
 public class Rental {
-    // レンタル状況の列挙型
     public enum RentalStatus {
-        RESERVED("Reserved"),       // 予約済み（レンタル前） ★ 追加
-        ACTIVE("Active"),           // レンタル中
-        RETURNED("Returned"),       // 返却済み
-        OVERDUE("Overdue"),         // 延滞中
-        CANCELLED("Cancelled");     // キャンセル
+        RESERVED("Reserved"),     
+        ACTIVE("Active"),         
+        RETURNED("Returned"),      
+        OVERDUE("Overdue"),       
+        CANCELLED("Cancelled");    
         
         private final String displayName;
         
@@ -40,13 +37,13 @@ public class Rental {
     private LocalDate returnDate;
     private LocalDate actualReturnDate;
     private double totalCost;
-    private double dailyRate; // ★ 追加
+    private double dailyRate; 
     private double lateFee;
     private RentalStatus status;
 
-    // コンストラクタ（新規レンタル用）
+
     public Rental(String rentalId, String memberId, String costumeId, String size,
-                  LocalDate rentalDate, LocalDate returnDate, double totalCost, double dailyRate) { // ★ dailyRate を追加
+                  LocalDate rentalDate, LocalDate returnDate, double totalCost, double dailyRate) { 
         this.rentalId = rentalId;
         this.memberId = memberId;
         this.costumeId = costumeId;
@@ -54,17 +51,17 @@ public class Rental {
         this.rentalDate = rentalDate;
         this.returnDate = returnDate;
         this.totalCost = totalCost;
-        this.dailyRate = dailyRate; // ★ 追加
+        this.dailyRate = dailyRate;
         this.lateFee = 0.0;
-        this.status = RentalStatus.RESERVED; // ★ 初期ステータスをRESERVEDに変更
+        this.status = RentalStatus.RESERVED;
         this.actualReturnDate = null;
-        updateStatus(); // 初期ステータスを更新
+        updateStatus(); 
     }
     
-    // コンストラクタ（CSVから読み込み用）
+   
     public Rental(String rentalId, String memberId, String costumeId, String size,
                   LocalDate rentalDate, LocalDate returnDate, LocalDate actualReturnDate,
-                  double totalCost, double dailyRate, double lateFee, RentalStatus status) { // ★ dailyRate を追加
+                  double totalCost, double dailyRate, double lateFee, RentalStatus status) { 
         this.rentalId = rentalId;
         this.memberId = memberId;
         this.costumeId = costumeId;
@@ -73,7 +70,7 @@ public class Rental {
         this.returnDate = returnDate;
         this.actualReturnDate = actualReturnDate;
         this.totalCost = totalCost;
-        this.dailyRate = dailyRate; // ★ 追加
+        this.dailyRate = dailyRate; 
         this.lateFee = lateFee;
         this.status = status;
     }
@@ -111,7 +108,7 @@ public class Rental {
         return totalCost;
     }
     
-    public double getDailyRate() { // ★ 追加
+    public double getDailyRate() { 
         return dailyRate;
     }
 
@@ -164,31 +161,20 @@ public class Rental {
         this.status = status;
     }
     
-    // ユーティリティメソッド
-    
-    /**
-     * レンタル期間（日数）を計算
-     */
+
     public long getRentalDays() {
         return ChronoUnit.DAYS.between(rentalDate, returnDate) + 1;
     }
     
-    /**
-     * 延滞日数を計算
-     */
+  
     public long getOverdueDays() {
         if (actualReturnDate != null) {
-            // 既に返却済みの場合
             return Math.max(0, ChronoUnit.DAYS.between(returnDate, actualReturnDate));
         } else {
-            // まだ返却していない場合
             return Math.max(0, ChronoUnit.DAYS.between(returnDate, LocalDate.now()));
         }
     }
     
-    /**
-     * 延滞しているかどうかを判定
-     */
     public boolean isOverdue() {
         if (status == RentalStatus.RETURNED || status == RentalStatus.CANCELLED) {
             return false;
@@ -196,17 +182,13 @@ public class Rental {
         return LocalDate.now().isAfter(returnDate);
     }
     
-    /**
-     * レンタル状況を自動更新
-     */
     public void updateStatus() {
         if (status == RentalStatus.RETURNED || status == RentalStatus.CANCELLED) {
-            return; // 既に完了している場合は更新しない
+            return; 
         }
         
         LocalDate today = LocalDate.now();
         
-        // ★ レンタル開始前か、期間中か、延滞中かを判定
         if (today.isBefore(rentalDate)) {
             status = RentalStatus.RESERVED;
         } else if (today.isAfter(returnDate)) {
@@ -216,32 +198,21 @@ public class Rental {
         }
     }
     
-    /**
-     * 延滞金を計算（フィールドのdailyRateを使用）
-     */
-    public double calculateLateFee() { // ★ 引数を削除
+    public double calculateLateFee() {
         long overdueDays = getOverdueDays();
         if (overdueDays <= 0) {
             return 0.0;
         }
-        return overdueDays * this.dailyRate * 0.1; // 1日あたり10%の延滞金
+        return overdueDays * this.dailyRate * 0.1; 
     }
     
-    /**
-     * 総支払い金額を計算（基本料金 + 延滞金）
-     * キャンセルされたレンタルの場合は0を返す
-     */
     public double getTotalPayment() {
-        // キャンセルされたレンタルは費用が発生しない
         if (status == RentalStatus.CANCELLED) {
             return 0.0;
         }
         return totalCost + lateFee;
     }
     
-    /**
-     * 日付を文字列に変換（表示用）
-     */
     public String getFormattedRentalDate() {
         return rentalDate.format(DateTimeFormatter.ofPattern("yyyy/MM/dd"));
     }
@@ -257,9 +228,6 @@ public class Rental {
         return actualReturnDate.format(DateTimeFormatter.ofPattern("yyyy/MM/dd"));
     }
     
-    /**
-     * CSVファイル用の文字列形式に変換
-     */
     public String toCsvString() {
         String actualReturnDateStr = (actualReturnDate != null) ? actualReturnDate.toString() : "";
         return String.join(",",
@@ -271,15 +239,13 @@ public class Rental {
                 returnDate.toString(),
                 actualReturnDateStr,
                 String.format("%.2f", totalCost),
-                String.format("%.2f", dailyRate), // ★ 追加
+                String.format("%.2f", dailyRate), 
                 String.format("%.2f", lateFee),
                 status.name()
         );
     }
 
-    /**
-     * CSV文字列からRentalオブジェクトを作成
-     */
+
     public static Rental fromCsvString(String csvLine) {
         String[] parts = csvLine.split(",");
         String rentalId = parts[0];
@@ -291,19 +257,17 @@ public class Rental {
         LocalDate actualReturnDate = parts[6].isEmpty() ? null : LocalDate.parse(parts[6]);
         double totalCost = Double.parseDouble(parts[7]);
         
-        // ★ dailyRateの読み込み（古いフォーマットにも対応）
         double dailyRate;
         double lateFee;
         RentalStatus status;
         
-        if (parts.length > 10) { // 新しいフォーマット (11列)
+        if (parts.length > 10) { 
             dailyRate = Double.parseDouble(parts[8]);
             lateFee = Double.parseDouble(parts[9]);
             status = RentalStatus.valueOf(parts[10]);
-        } else { // 古いフォーマット (10列)
+        } else { 
             lateFee = Double.parseDouble(parts[8]);
             status = RentalStatus.valueOf(parts[9]);
-            // dailyRateを計算して補完
             long rentalDays = java.time.temporal.ChronoUnit.DAYS.between(rentalDate, returnDate) + 1;
             dailyRate = (rentalDays > 0) ? totalCost / rentalDays : totalCost;
         }

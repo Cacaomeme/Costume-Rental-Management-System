@@ -19,7 +19,6 @@ public class RegistrationFrame extends JFrame {
     }
     
     private void initializeComponents() {
-        // ... (Component initialization code remains the same, but with English text)
         nameField = new JTextField(20);
         memberIdField = new JTextField(20);
         emailField = new JTextField(20);
@@ -38,7 +37,6 @@ public class RegistrationFrame extends JFrame {
     }
     
     private void setupLayout() {
-        // ... (Layout setup code remains the same)
         setLayout(new BorderLayout());
         JPanel titlePanel = new JPanel();
         titlePanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
@@ -135,18 +133,15 @@ public class RegistrationFrame extends JFrame {
     
     private boolean validateInput(String name, String memberId, String email, String phone, 
                                 String password, String confirmPassword, String address) {
-        // ... (Validation logic remains the same)
         return true; // Simplified for brevity
     }
     
     private boolean isMemberIdExists(String memberId) {
-        // CORRECTED: Use getInstance()
         return FileIO.getInstance().isMemberIdExists(memberId);
     }
     
     private boolean registerNewMember(String name, String memberId, String email, 
                                     String phone, String password, String address) {
-        // CORRECTED: Use getInstance()
         return FileIO.getInstance().write(name, memberId, email, phone, password, address);
     }
     

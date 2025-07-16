@@ -9,9 +9,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 
-/**
- * Rental procedure screen
- */
+
 public class RentalFrame extends JFrame {
     private String currentMemberId;
     private Costume selectedCostume;
@@ -52,7 +50,7 @@ public class RentalFrame extends JFrame {
     // Field to hold ReserveCalendar instance
     private ReserveCalendar calendarDialog;
     
-    private boolean isInitializing = true; // 初期化中フラグを追加
+    private boolean isInitializing = true; 
     
     public RentalFrame(String memberId, Costume costume) {
         this.currentMemberId = memberId;
@@ -66,18 +64,14 @@ public class RentalFrame extends JFrame {
         updatePriceCalculation();
         setupFrame();
         
-        // 初期化完了
         isInitializing = false;
         
-        // --- ここから追加: 初期カレンダー表示 ---
-        // RentalFrameが完全に表示された後に、最初に選択されているサイズのカレンダーを表示
         SwingUtilities.invokeLater(() -> {
             String selectedSize = (String) sizeComboBox.getSelectedItem();
             if (selectedSize != null) {
                 showInitialCalendar(selectedSize);
             }
         });
-        // --- ここまで追加 ---
     }
     
     private void initializeComponents() {
@@ -119,7 +113,7 @@ public class RentalFrame extends JFrame {
         // Start date selection - separate spinners for year, month, day
         LocalDate tomorrow = LocalDate.now().plusDays(1); // Start from tomorrow
         
-        // Year spinner (current year to 2 years from now)
+        // Year spinner 
         int currentYear = tomorrow.getYear();
         yearSpinner = new JSpinner(new SpinnerNumberModel(currentYear, currentYear, currentYear + 2, 1));
         yearSpinner.setFont(new Font("Arial", Font.BOLD, 14));
@@ -267,7 +261,7 @@ public class RentalFrame extends JFrame {
         JPanel bottomPanel = new JPanel();
         bottomPanel.setLayout(new BoxLayout(bottomPanel, BoxLayout.Y_AXIS));
         bottomPanel.add(termsPanel);
-        bottomPanel.add(Box.createVerticalStrut(10)); // Spacing
+        bottomPanel.add(Box.createVerticalStrut(10)); 
         bottomPanel.add(costPanel);
         
         panel.add(sizePanel, BorderLayout.NORTH);
@@ -477,10 +471,6 @@ public class RentalFrame extends JFrame {
         return panel;
     }
     
-    // --- ここから追加 ---
-    /**
-     * 初期カレンダーを表示する
-     */
     private void showInitialCalendar(String selectedSize) {
         if (calendarDialog == null) {
             calendarDialog = new ReserveCalendar(this, selectedCostume.getCostumeId(), selectedSize);
@@ -489,12 +479,11 @@ public class RentalFrame extends JFrame {
             calendarDialog.setVisible(true);
         }
     }
-    // --- ここまで追加 ---
+
     
     private void setupEventListeners() {
         // Size change event listener
         sizeComboBox.addActionListener(e -> {
-            // 初期化中はカレンダーを表示しない
             if (isInitializing) {
                 return;
             }
@@ -510,11 +499,9 @@ public class RentalFrame extends JFrame {
             // Calendar display logic
             // If calendar is not created or not visible
             if (calendarDialog == null || !calendarDialog.isVisible()) {
-                // RentalFrameが完全に表示されてからカレンダーを表示
                 SwingUtilities.invokeLater(() -> {
                     calendarDialog = new ReserveCalendar(this, selectedCostume.getCostumeId(), selectedSize);
                     
-                    // RentalFrameの右側に正確に配置
                     positionCalendarToRight();
                     
                     calendarDialog.setSize(350, 350); 
@@ -558,7 +545,6 @@ public class RentalFrame extends JFrame {
         cancelButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // カレンダーも閉じる
                 if (calendarDialog != null) {
                     calendarDialog.dispose();
                 }
@@ -607,18 +593,15 @@ public class RentalFrame extends JFrame {
     private void setupSizeComboBox() {
         sizeComboBox.removeAllItems();
 
-        // 共通の順序リスト
         java.util.List<String> order = java.util.List.of("XS", "S", "M", "L", "XL", "XXL", "One Size");
         java.util.List<String> available = new java.util.ArrayList<>(selectedCostume.getAvailableSizes());
 
-        // 指定順で追加
         for (String size : order) {
             if (available.contains(size)) {
                 sizeComboBox.addItem(size);
                 available.remove(size);
             }
         }
-        // その他のサイズも追加
         for (String size : available) {
             sizeComboBox.addItem(size);
         }
@@ -780,7 +763,6 @@ public class RentalFrame extends JFrame {
                     "Rental Confirmed",
                     JOptionPane.INFORMATION_MESSAGE);
                 
-                // カレンダーも閉じる
                 if (calendarDialog != null) {
                     calendarDialog.dispose();
                 }
@@ -803,39 +785,30 @@ public class RentalFrame extends JFrame {
         }
     }
     
-    // --- ここから追加 ---
-    /**
-     * カレンダーをRentalFrameの右側に配置する
-     */
     private void positionCalendarToRight() {
         if (calendarDialog != null) {
-            // RentalFrameの現在の位置とサイズを取得
             Point frameLocation = this.getLocationOnScreen();
             int frameWidth = this.getWidth();
             int frameHeight = this.getHeight();
             
-            // カレンダーの位置を計算（右側に配置）
-            int calendarX = frameLocation.x + frameWidth + 10; // 10pxの余白
+            int calendarX = frameLocation.x + frameWidth + 10; 
             int calendarY = frameLocation.y;
             
-            // 画面の境界をチェック
             Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
             int calendarWidth = 350;
             
-            // 画面右端を超える場合は左側に配置
             if (calendarX + calendarWidth > screenSize.width) {
-                calendarX = frameLocation.x - calendarWidth - 10; // 左側に配置
+                calendarX = frameLocation.x - calendarWidth - 10; 
             }
             
-            // 画面下端を超える場合は調整
+
             if (calendarY + 350 > screenSize.height) {
-                calendarY = screenSize.height - 350 - 50; // 画面下端から50px上
+                calendarY = screenSize.height - 350 - 50; 
             }
             
             calendarDialog.setLocation(calendarX, calendarY);
         }
     }
-    // --- ここまで追加 ---
     
     private void setupFrame() {
         setTitle("Costume Rental - " + selectedCostume.getCostumeName());
@@ -844,18 +817,14 @@ public class RentalFrame extends JFrame {
         setLocationRelativeTo(null);
         setResizable(false);
         
-        // --- ここから追加: ウィンドウが表示された後の処理 ---
-        // ウィンドウが表示された後にカレンダーの位置を再調整
         addComponentListener(new java.awt.event.ComponentAdapter() {
             @Override
             public void componentMoved(java.awt.event.ComponentEvent e) {
-                // RentalFrameが移動したときにカレンダーも一緒に移動
                 if (calendarDialog != null && calendarDialog.isVisible()) {
                     positionCalendarToRight();
                 }
             }
         });
-        // --- ここまで追加 ---
     }
     
     private String getTermsAndConditions() {

@@ -86,7 +86,8 @@ public class FileIO {
             return false;
         }
 
-        String line = String.join(",", escape(name), memberId, escape(email), phone, password, escape(address));
+        String registrationDate = LocalDate.now().toString();
+        String line = String.join(",", escape(name), memberId, escape(email), phone, password, escape(address), registrationDate);
         try {
             Files.write(REGISTRATER_PATH, Collections.singletonList(line), StandardCharsets.UTF_8,
                        StandardOpenOption.CREATE, StandardOpenOption.APPEND);
@@ -127,10 +128,11 @@ public class FileIO {
 
     // MemberData class remains the same
     public static class MemberData {
-        private final String name, memberId, email, phone, password, address;
-        public MemberData(String name, String memberId, String email, String phone, String password, String address) {
+        private final String name, memberId, email, phone, password, address, registrationDate;
+        public MemberData(String name, String memberId, String email, String phone, String password, String address, String registrationDate) {
             this.name = name; this.memberId = memberId; this.email = email;
             this.phone = phone; this.password = password; this.address = address;
+            this.registrationDate = registrationDate;
         }
         public String getName() { return name; }
         public String getMemberId() { return memberId; }
@@ -138,6 +140,7 @@ public class FileIO {
         public String getPhone() { return phone; }
         public String getPassword() { return password; }
         public String getAddress() { return address; }
+        public String getRegistrationDate() { return registrationDate; }
     }
 
   
@@ -148,9 +151,10 @@ public class FileIO {
             if (line.trim().isEmpty()) continue;
             String[] parts = line.split(",");
             if (parts.length >= 6) {
+                String registrationDate = (parts.length > 6) ? unescape(parts[6]) : "N/A";
                 members.add(new MemberData(
                     unescape(parts[0]), parts[1].trim(), unescape(parts[2]), 
-                    parts[3], parts[4], unescape(parts[5])));
+                    parts[3], parts[4], unescape(parts[5]), registrationDate));
             }
         }
         return members;
@@ -179,7 +183,7 @@ public class FileIO {
         List<String> lines = new ArrayList<>();
         for (MemberData member : members) {
             lines.add(String.join(",", escape(member.getName()), member.getMemberId(), escape(member.getEmail()),
-                member.getPhone(), member.getPassword(), escape(member.getAddress())));
+                member.getPhone(), member.getPassword(), escape(member.getAddress()), escape(member.getRegistrationDate())));
         }
         return writeAllLines(REGISTRATER_PATH.toString(), lines);
     }
@@ -193,7 +197,7 @@ public class FileIO {
         List<String> lines = new ArrayList<>();
         for (MemberData member : members) {
             lines.add(String.join(",", escape(member.getName()), member.getMemberId(), escape(member.getEmail()),
-                member.getPhone(), member.getPassword(), escape(member.getAddress())));
+                member.getPhone(), member.getPassword(), escape(member.getAddress()), escape(member.getRegistrationDate())));
         }
         return writeAllLines(REGISTRATER_PATH.toString(), lines);
     }
@@ -287,6 +291,9 @@ public class FileIO {
     
     // Utility methods for handling commas in CSV data
     private String escape(String data) {
+        if (data == null) {
+            return "";
+        }
         if (data.contains(",")) {
             return "\"" + data.replace("\"", "\"\"") + "\"";
         }

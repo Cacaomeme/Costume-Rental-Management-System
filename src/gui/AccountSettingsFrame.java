@@ -82,7 +82,7 @@ public class AccountSettingsFrame extends JFrame {
             addressArea.setText(currentMemberData.getAddress());
 
             memberIdLabel.setText("Member ID: " + currentMemberData.getMemberId());
-            registrationDateLabel.setText("Registration Date: (Not implemented)");
+            registrationDateLabel.setText("Registration Date: " + currentMemberData.getRegistrationDate());
         }
     }
 
@@ -236,7 +236,7 @@ public class AccountSettingsFrame extends JFrame {
         }
 
         FileIO.MemberData updatedData = new FileIO.MemberData(
-            name, currentMemberId, email, phone, currentMemberData.getPassword(), address
+            name, currentMemberId, email, phone, currentMemberData.getPassword(), address, currentMemberData.getRegistrationDate()
         );
 
         if (fileIO.updateMember(currentMemberId, updatedData)) {
@@ -268,7 +268,8 @@ public class AccountSettingsFrame extends JFrame {
 
         FileIO.MemberData updatedData = new FileIO.MemberData(
             currentMemberData.getName(), currentMemberId, currentMemberData.getEmail(),
-            currentMemberData.getPhone(), newPassword, currentMemberData.getAddress()
+            currentMemberData.getPhone(), newPassword, currentMemberData.getAddress(),
+            currentMemberData.getRegistrationDate()
         );
 
         if (fileIO.updateMember(currentMemberId, updatedData)) {

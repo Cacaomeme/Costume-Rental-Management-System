@@ -1,10 +1,8 @@
 package gui;
 
+import java.awt.*;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 public class AdminDashboardFrame extends JFrame {
 
@@ -78,8 +76,8 @@ public class AdminDashboardFrame extends JFrame {
 
     private void updateStats() {
         int memberCount = fileIO.getRegistrationCount();
-        int costumeCount = fileIO.getAvailableCostumesCount(); // This method might need to be created in FileIO
-        int activeRentals = fileIO.getActiveRentalsCount(); // This method might need to be created in FileIO
+        int costumeCount = fileIO.getAvailableCostumesCount(); 
+        int activeRentals = fileIO.getActiveRentalsCount(); 
         
         statsLabel.setText(String.format(
             "<html><b>System Status:</b><br>" +
@@ -90,7 +88,4 @@ public class AdminDashboardFrame extends JFrame {
         ));
     }
 
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new AdminDashboardFrame().setVisible(true));
-    }
 }

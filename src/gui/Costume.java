@@ -1,19 +1,16 @@
-// src/gui/Costume.java
 package gui;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * Represents a single costume item in the rental system.
- */
+
 public class Costume {
     private String costumeId;       
     private String costumeName;     
     private CostumeEvent event;     
     private double price;           
-    private Map<String, Integer> sizeStock; // MODIFIED: To handle multiple sizes and stocks
+    private Map<String, Integer> sizeStock; 
     private String imagePath;
 
     public Costume(String costumeId, String costumeName, CostumeEvent event, double price, String imagePath) {
@@ -21,14 +18,14 @@ public class Costume {
         this.costumeName = costumeName;
         this.event = event;
         this.price = price;
-        this.sizeStock = new HashMap<>(); // MODIFIED
+        this.sizeStock = new HashMap<>(); 
         this.imagePath = imagePath;
     }
 
     // Constructor for backward compatibility
     public Costume(String costumeId, String costumeName, CostumeEvent event, double price, String size, int stock, String imagePath) {
         this(costumeId, costumeName, event, price, imagePath);
-        this.sizeStock.put(size, stock); // MODIFIED
+        this.sizeStock.put(size, stock); 
     }
 
     // Getters and Setters
@@ -44,7 +41,7 @@ public class Costume {
     public String getImagePath() { return imagePath; }
     public void setImagePath(String imagePath) { this.imagePath = imagePath; }
     
-    // ADDED: Methods for managing multiple sizes and stocks
+    // Methods for managing multiple sizes and stocks
     public Map<String, Integer> getSizeStock() { return sizeStock; }
     public void setSizeStock(Map<String, Integer> sizeStock) { this.sizeStock = sizeStock; }
     public void addSizeStock(String size, int stock) { this.sizeStock.put(size, stock); }
@@ -57,7 +54,7 @@ public class Costume {
         return sizeStock.values().stream().mapToInt(Integer::intValue).sum();
     }
 
-    // MODIFIED: Old methods for compatibility, now using the map
+    // Old methods for compatibility, now using the map
     public String getSize() {
         if (!sizeStock.isEmpty()) {
             return sizeStock.keySet().iterator().next(); // Returns the first size

@@ -7,9 +7,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * レンタル情報の管理サービスクラス
- */
 public class RentalService {
     private static final String RENTAL_FILE_PATH = "gui/rentals.csv";
     private List<Rental> allRentals;
@@ -21,9 +18,7 @@ public class RentalService {
         loadRentals();
     }
     
-    /**
-     * レンタル情報をCSVファイルから読み込み
-     */
+
     private void loadRentals() {
         File file = new File(RENTAL_FILE_PATH);
         if (!file.exists()) {
@@ -37,14 +32,13 @@ public class RentalService {
             
             String line;
             while ((line = reader.readLine()) != null) {
-                // コメント行や空行をスキップ
                 if (line.trim().isEmpty() || line.startsWith("#")) {
                     continue;
                 }
                 
                 try {
                     Rental rental = Rental.fromCsvString(line);
-                    rental.updateStatus(); // 状況を最新に更新
+                    rental.updateStatus(); 
                     allRentals.add(rental);
                 } catch (Exception e) {
                     System.err.println("Error parsing rental line: " + line + " - " + e.getMessage());
@@ -58,13 +52,10 @@ public class RentalService {
         }
     }
     
-    /**
-     * 空のレンタルファイルを作成
-     */
     private void createEmptyRentalFile() {
         try {
             File file = new File(RENTAL_FILE_PATH);
-            file.getParentFile().mkdirs(); // ディレクトリを作成
+            file.getParentFile().mkdirs(); 
             
             try (PrintWriter writer = new PrintWriter(
                     new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8))) {
@@ -77,9 +68,6 @@ public class RentalService {
         }
     }
     
-    /**
-     * レンタル情報をCSVファイルに保存
-     */
     public void saveRentals() {
         try (PrintWriter writer = new PrintWriter(
                 new OutputStreamWriter(new FileOutputStream(RENTAL_FILE_PATH), StandardCharsets.UTF_8))) {
@@ -99,9 +87,6 @@ public class RentalService {
         }
     }
     
-    /**
-     * 新規レンタルIDを生成
-     */
     public String generateNewRentalId() {
         int maxId = 0;
         for (Rental rental : allRentals) {
@@ -111,16 +96,13 @@ public class RentalService {
                     int num = Integer.parseInt(id.substring(1));
                     maxId = Math.max(maxId, num);
                 } catch (NumberFormatException e) {
-                    // IDの形式が異なる場合はスキップ
                 }
             }
         }
         return String.format("R%03d", maxId + 1);
     }
     
-    /**
-     * 新しいレンタルを作成
-     */
+
     public boolean createRental(String memberId, String costumeId, String size, LocalDate rentalDate, 
                                LocalDate returnDate, double totalCost) {
         try {
@@ -148,9 +130,6 @@ public class RentalService {
         }
     }
     
-    /**
-     * 衣装が利用可能かチェック
-     */
     public boolean isCostumeAvailable(String costumeId) {
         List<Costume> costumes = costumeManager.loadCostumes();
         for (Costume costume : costumes) {
@@ -160,10 +139,7 @@ public class RentalService {
         }
         return false;
     }
-    
-    /**
-     * 特定サイズの衣装が利用可能かチェック
-     */
+
     public boolean isCostumeAvailable(String costumeId, String size) {
         List<Costume> costumes = costumeManager.loadCostumes();
         for (Costume costume : costumes) {
@@ -174,32 +150,20 @@ public class RentalService {
         return false;
     }
     
-    /**
-     * 衣装の在庫を更新（レンタル時-1、返却時+1）
-     */
     private void updateCostumeStock(String costumeId, int change) {
         System.out.println("Stock update for costume " + costumeId + ": " + change);
     }
-    
-    /**
-     * 特定サイズの衣装の在庫を更新（レンタル時-1、返却時+1）
-     */
+   
     private void updateCostumeStock(String costumeId, String size, int change) {
         System.out.println("Stock update for costume " + costumeId + " size " + size + ": " + change);
     }
     
-    /**
-     * 特定会員のレンタル履歴を取得
-     */
     public List<Rental> getRentalsByMemberId(String memberId) {
         return allRentals.stream()
                 .filter(rental -> rental.getMemberId().equals(memberId))
                 .collect(Collectors.toList());
     }
     
-    /**
-     * 特定会員のアクティブなレンタルを取得
-     */
     public List<Rental> getActiveRentalsByMemberId(String memberId) {
         return allRentals.stream()
                 .filter(rental -> rental.getMemberId().equals(memberId))
@@ -209,9 +173,6 @@ public class RentalService {
                 .collect(Collectors.toList());
     }
     
-    /**
-     * 特定衣装のアクティブなレンタルを取得
-     */
     public List<Rental> getActiveRentalsByCostumeId(String costumeId) {
         return allRentals.stream()
                 .filter(rental -> rental.getCostumeId().equals(costumeId))
@@ -220,18 +181,12 @@ public class RentalService {
                 .collect(Collectors.toList());
     }
     
-    /**
-     * 延滞中のレンタルを取得
-     */
     public List<Rental> getOverdueRentals() {
         return allRentals.stream()
                 .filter(rental -> rental.getStatus() == Rental.RentalStatus.OVERDUE)
                 .collect(Collectors.toList());
     }
     
-    /**
-     * レンタルを返却処理
-     */
     public boolean returnRental(String rentalId, LocalDate actualReturnDate) {
         for (Rental rental : allRentals) {
             if (rental.getRentalId().equals(rentalId)) {
@@ -259,9 +214,6 @@ public class RentalService {
         return false;
     }
     
-    /**
-     * レンタルをキャンセルする
-     */
     public boolean cancelRental(String rentalId) {
         for (Rental rental : allRentals) {
             if (rental.getRentalId().equals(rentalId)) {
@@ -283,9 +235,6 @@ public class RentalService {
         return false;
     }
     
-    /**
-     * レンタル状況を更新（延滞チェック等）
-     */
     public void updateAllRentalStatuses() {
         boolean hasChanges = false;
         
@@ -305,30 +254,18 @@ public class RentalService {
         }
     }
     
-    /**
-     * レンタル期間の日数計算
-     */
     public static long calculateRentalDays(LocalDate startDate, LocalDate endDate) {
         return java.time.temporal.ChronoUnit.DAYS.between(startDate, endDate) + 1;
     }
     
-    /**
-     * レンタル料金計算（基本料金 × 日数）
-     */
     public static double calculateRentalCost(double dailyRate, long days) {
         return dailyRate * days;
     }
     
-    /**
-     * 全レンタル情報を取得
-     */
     public List<Rental> getAllRentals() {
         return new ArrayList<>(allRentals);
     }
-    
-    /**
-     * レンタル情報を検索
-     */
+   
     public Rental findRentalById(String rentalId) {
         return allRentals.stream()
                 .filter(rental -> rental.getRentalId().equals(rentalId))

@@ -1,4 +1,3 @@
-// src/gui/FileIO.java
 package gui;
 
 import java.io.IOException;
@@ -14,10 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * FileIO class for all data management including members, costumes, and rentals.
- * Supports CRUD operations.
- */
+
 public class FileIO {
     private static final Path REGISTRATER_PATH = Paths.get("./gui/Registrater.csv");
     private static final Path COSTUMES_PATH = Paths.get("./gui/costumes.csv");
@@ -70,7 +66,7 @@ public class FileIO {
         }
     }
 
-    // Generic method to write all lines to any file (overwrites existing)
+    // Generic method to write all lines to any file
     public boolean writeAllLines(String filePath, List<String> lines) {
         try {
             Files.write(Paths.get(filePath), lines, StandardCharsets.UTF_8, 
@@ -83,9 +79,7 @@ public class FileIO {
     }
 
 
-    /**
-     * Writes new member registration data.
-     */
+
     public boolean write(String name, String memberId, String email, String phone, String password, String address) {
         if (isMemberIdExists(memberId)) {
             System.err.println("Cannot write member data: Member ID already exists");
@@ -103,9 +97,7 @@ public class FileIO {
         }
     }
 
-    /**
-     * Checks if a member ID already exists.
-     */
+    
     public boolean isMemberIdExists(String memberId) {
         if (memberId == null || memberId.trim().isEmpty()) return false;
         List<String> lines = readAllLines(REGISTRATER_PATH.toString());
@@ -118,9 +110,7 @@ public class FileIO {
         return false;
     }
     
-    /**
-     * Authenticates a user login.
-     */
+ 
     public boolean isValidLogin(String memberId, String password) {
          if (memberId == null || password == null || memberId.trim().isEmpty() || password.isEmpty()) {
             return false;
@@ -150,9 +140,7 @@ public class FileIO {
         public String getAddress() { return address; }
     }
 
-    /**
-     * Gets all member data.
-     */
+  
     public List<MemberData> getAllMembers() {
         List<MemberData> members = new ArrayList<>();
         List<String> lines = readAllLines(REGISTRATER_PATH.toString());
@@ -168,9 +156,7 @@ public class FileIO {
         return members;
     }
     
-    /**
-     * Gets data for a single member.
-     */
+
     public MemberData getMemberData(String memberId) {
         return getAllMembers().stream()
             .filter(m -> m.getMemberId().equals(memberId))

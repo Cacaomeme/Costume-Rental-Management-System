@@ -53,7 +53,8 @@ public class EditMemberDialog extends JDialog {
             emailField.getText(),
             phoneField.getText(),
             member.getPassword(), // Password is not changed in this dialog
-            addressArea.getText()
+            addressArea.getText(),
+            member.getRegistrationDate() // Keep the original registration date
         );
 
         if (fileIO.updateMember(member.getMemberId(), updatedData)) {

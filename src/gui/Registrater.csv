@@ -1,6 +1,7 @@
-admin11,admin,admin11@admin.com,111-1111-1111,password,Tokyo 1-1
-test,test,test@test.com,phone_number,password,address
-FullName,ICPC,Email@address.com,110,password,Yagami3-14-1
-newuser,newuser,new@keio.jp,11122223333,password,japan
-keishi,55,ss@kei.com,4445558891,qwe,tokyo
-Ikeya Taishi,taishi77,Imtaishi@keio.jp,0547789941,4444,Saitama
+admin11,admin,admin11@admin.com,111-1111-1111,password,Tokyo 1-1,2024-07-1
+test,test,test@test.com,phone_number,password,address,2024-07-9
+FullName,ICPC,Email@address.com,110,password,Yagami3-14-1,2024-07-15
+newuser,newuser,new@keio.jp,11122223333,password,japan,2024-07-15
+keishi,55,ss@kei.com,4445558891,qwe,tokyo,2024-07-17
+Ikeya Taishi,taishi77,Imtaishi@keio.jp,0547789941,4444,Saitama,2024-07-18
+Yamada Shigehiro,yamada88,Imshige@keio.jp,08077778888,55,yagami,2025-07-18
